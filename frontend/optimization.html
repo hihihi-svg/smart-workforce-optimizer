@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimization - Smart Workforce Optimizer</title>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared CSS Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .opt-box {
+            text-align: center;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 3rem;
+        }
+
+        .pipeline-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 2.5rem 0;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .flow-step-icon {
+            font-size: 1.75rem;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            opacity: 0.5;
+        }
+
+        .dependency-graph-preview {
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .dependency-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin: 0.35rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Spinner for loading state */
+        .spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(129, 140, 248, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            margin: 2rem auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">Workforce Optimizer</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="employees.html">Employees</a>
+            <a href="tasks.html">Tasks</a>
+            <a href="search.html">Skill Search</a>
+            <a href="optimization.html" class="active">Optimization</a>
+            <a href="results.html">Results</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>Algorithm Optimization Pipeline</h1>
+            <p>Run workforce scheduling and assignment algorithms sequentially in one click.</p>
+        </div>
+
+        <div class="glass-panel opt-box">
+            <h2>⚙️ Pipeline Execution</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                This will trigger Topological Sort, CPM critical paths, suitability scoring, Kuhn-Munkres (Hungarian) matching, Greedy baseline scheduling, and Branch & Bound validation on the backend.
+            </p>
+
+            <div class="pipeline-flow">
+                <div class="flow-step">
+                    <span class="flow-step-icon">📂</span>
+                    <span>1. Load State</span>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <span class="flow-step-icon">🔀</span>
+                    <span>2. Kahn's / CPM</span>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <span class="flow-step-icon">⚖️</span>
+                    <span>3. Hungarian</span>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <span class="flow-step-icon">🌳</span>
+                    <span>4. B&B Validate</span>
+                </div>
+            </div>
+
+            <div class="dependency-graph-preview">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-secondary);">Dependency Links Detected:</h4>
+                <div id="dependency-links-container">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <button id="run-btn" class="btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.15rem;" onclick="runOptimization()">
+                Run Optimization Pipeline
+            </button>
+
+            <div class="spinner" id="opt-spinner"></div>
+            <div id="status-message" style="margin-top: 1rem; font-weight: 500;"></div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Smart Workforce Optimizer. Powered by custom DAA algorithms.
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            loadDependencyPreview();
+        });
+
+        async function loadDependencyPreview() {
+            const container = document.getElementById("dependency-links-container");
+            
+            try {
+                const response = await fetch("http://localhost:8000/tasks/");
+                if (!response.ok) throw new Error("Failed to fetch tasks");
+                const tasks = await response.json();
+                
+                let linkCount = 0;
+                let linksHtml = "";
+                
+                for (let t_id in tasks) {
+                    const deps = tasks[t_id].deps || [];
+                    for (let dep of deps) {
+                        linkCount++;
+                        linksHtml += `
+                            <span class="dependency-link">
+                                <span style="color: var(--warning);">${dep}</span>
+                                <span style="opacity: 0.5;">➔</span>
+                                <span style="color: var(--accent-primary);">${t_id}</span>
+                            </span>
+                        `;
+                    }
+                }
+
+                if (linkCount === 0) {
+                    container.innerHTML = `<span style="color: #475569; font-style: italic;">No dependencies defined yet. Independent tasks will run in parallel.</span>`;
+                } else {
+                    container.innerHTML = linksHtml;
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<span style="color: var(--danger);">Failed to load task graph preview.</span>`;
+            }
+        }
+
+        async function runOptimization() {
+            const runBtn = document.getElementById("run-btn");
+            const spinner = document.getElementById("opt-spinner");
+            const statusMsg = document.getElementById("status-message");
+
+            runBtn.disabled = true;
+            runBtn.style.opacity = 0.5;
+            spinner.style.display = "block";
+            statusMsg.style.color = "var(--accent-primary)";
+            statusMsg.textContent = "Running algorithms on backend...";
+
+            try {
+                const response = await fetch("http://localhost:8000/optimize/run");
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.detail || "Optimization failed");
+                }
+                const results = await response.json();
+
+                // Save optimization results to localStorage
+                localStorage.setItem("optimization_results", JSON.stringify(results));
+                
+                statusMsg.style.color = "var(--success)";
+                statusMsg.textContent = "Pipeline completed successfully! Redirecting to results...";
+                
+                setTimeout(() => {
+                    window.location.href = "results.html";
+                }, 1500);
+
+            } catch (err) {
+                console.error(err);
+                runBtn.disabled = false;
+                runBtn.style.opacity = 1;
+                spinner.style.display = "none";
+                statusMsg.style.color = "var(--danger)";
+                statusMsg.textContent = `Error: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimization Results - Smart Workforce Optimizer</title>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared CSS Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin: 2rem 0 1.25rem;
+            border-bottom: 1.5px solid var(--card-border);
+            padding-bottom: 0.5rem;
+            color: var(--accent-primary);
+        }
+
+        .side-by-side {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .side-by-side {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .results-summary-card {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(192, 132, 252, 0.1) 100%);
+            border: 1.5px solid rgba(129, 140, 248, 0.2);
+        }
+
+        .cpm-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 650px) {
+            .cpm-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bb-details {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .bb-metric {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .bb-metric:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">Workforce Optimizer</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="employees.html">Employees</a>
+            <a href="tasks.html">Tasks</a>
+            <a href="search.html">Skill Search</a>
+            <a href="optimization.html">Optimization</a>
+            <a href="results.html" class="active">Results</a>
+        </nav>
+    </header>
+
+    <div class="container" id="main-container">
+        <div class="hero-section">
+            <h1>Optimization Pipeline Results</h1>
+            <p>Compare scheduling timelines and optimal vs greedy allocation strategies.</p>
+        </div>
+
+        <div id="no-results-panel" class="alert-panel alert-panel-warning" style="display: none;">
+            <h3 style="margin-bottom: 0.5rem;">⚠️ No Optimization Data Found</h3>
+            <p>Please go to the <a href="optimization.html" style="color: var(--accent-primary); font-weight: 600;">Optimization</a> page and run the pipeline first to generate scheduling and matching results.</p>
+        </div>
+
+        <div id="results-content" style="display: none;">
+            <!-- 1. CPM Scheduling Section -->
+            <h2 class="section-title">📅 1. Project Scheduling (CPM)</h2>
+            <div class="glass-panel cpm-grid">
+                <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 1px solid var(--card-border); padding-right: 1rem;">
+                    <div style="font-size: 3rem; font-weight: 700; color: var(--success);" id="cpm-duration">-</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Total Duration</div>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 0.5rem;">Critical Task Flow</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;">
+                        The critical path consists of tasks with zero float/slack. Any delay on these tasks will directly delay the project completion.
+                    </p>
+                    <div id="cpm-critical-badges" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem;">
+                        <!-- Critical badges -->
+                    </div>
+                    
+                    <h4 style="margin-bottom: 0.5rem; font-size: 0.95rem; color: var(--text-secondary);">Earliest Finish Times:</h4>
+                    <div id="cpm-ef-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <!-- Earliest finish list -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Bipartite Matching: Hungarian vs Greedy -->
+            <h2 class="section-title">⚖️ 2. Resource Assignment Engine (Hungarian vs Greedy)</h2>
+            <div class="side-by-side">
+                <!-- Hungarian Column -->
+                <div class="glass-panel">
+                    <h3 style="margin-bottom: 1rem; color: var(--success); display: flex; justify-content: space-between;">
+                        Hungarian Allocation
+                        <span class="badge badge-success">Optimal</span>
+                    </h3>
+                    <div class="table-container" style="margin-bottom: 1.25rem;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Assigned Employee</th>
+                                    <th>Suitability</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hungarian-tbody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="font-weight: 600; font-size: 1.1rem; text-align: right;" id="hungarian-total-score">
+                        Total Combined Score: -
+                    </div>
+                </div>
+
+                <!-- Greedy Column -->
+                <div class="glass-panel">
+                    <h3 style="margin-bottom: 1rem; color: var(--warning); display: flex; justify-content: space-between;">
+                        Greedy Allocation
+                        <span class="badge badge-warning">Local Heuristic</span>
+                    </h3>
+                    <div class="table-container" style="margin-bottom: 1.25rem;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Assigned Employee</th>
+                                    <th>Suitability</th>
+                                </tr>
+                            </thead>
+                            <tbody id="greedy-tbody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="font-weight: 600; font-size: 1.1rem; text-align: right;" id="greedy-total-score">
+                        Total Combined Score: -
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Branch & Bound Validation Section -->
+            <h2 class="section-title">🌳 3. Optimal Validation (Branch & Bound)</h2>
+            <div class="glass-panel">
+                <p style="color: var(--text-secondary); margin-bottom: 1.25rem; font-size: 0.95rem;">
+                    Branch and Bound validates the Hungarian matching result by exploring the assignment permutations recursively and pruning sub-optimal branches.
+                </p>
+                <div class="bb-details">
+                    <div class="bb-metric">
+                        <span style="color: var(--text-secondary); font-weight: 500;">B&B Optimal Cost Index:</span>
+                        <strong style="color: var(--accent-primary);" id="bb-cost">-</strong>
+                    </div>
+                    <div class="bb-metric">
+                        <span style="color: var(--text-secondary); font-weight: 500;">State Space Nodes Pruned:</span>
+                        <strong style="color: var(--success);" id="bb-pruned">-</strong>
+                    </div>
+                    <div class="bb-metric">
+                        <span style="color: var(--text-secondary); font-weight: 500;">Best Optimal Assignments Index Mapping:</span>
+                        <span style="font-family: monospace; color: var(--text-primary);" id="bb-mapping">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Performance analysis summary -->
+            <h2 class="section-title">💡 4. Summary & Algorithmic Analysis</h2>
+            <div class="glass-panel results-summary-card" id="analysis-card">
+                <!-- Dynamically loaded analysis -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Smart Workforce Optimizer. Powered by custom DAA algorithms.
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderResults();
+        });
+
+        function renderResults() {
+            const cachedResults = localStorage.getItem("optimization_results");
+            const noResultsPanel = document.getElementById("no-results-panel");
+            const resultsContent = document.getElementById("results-content");
+
+            if (!cachedResults) {
+                noResultsPanel.style.display = "block";
+                resultsContent.style.display = "none";
+                return;
+            }
+
+            noResultsPanel.style.display = "none";
+            resultsContent.style.display = "block";
+
+            const results = JSON.parse(cachedResults);
+
+            // 1. CPM Rendering
+            if (results.cpm) {
+                document.getElementById("cpm-duration").textContent = results.cpm.duration + "d";
+                
+                const criticalContainer = document.getElementById("cpm-critical-badges");
+                criticalContainer.innerHTML = results.cpm.critical_tasks.map(task => 
+                    `<span class="badge badge-danger" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">${task}</span>`
+                ).join(' ');
+
+                const efContainer = document.getElementById("cpm-ef-container");
+                let efHtml = "";
+                for (let task in results.cpm.earliest_finish) {
+                    efHtml += `
+                        <span style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.85rem;">
+                            <strong>${task}</strong>: ${results.cpm.earliest_finish[task]}d
+                        </span>
+                    `;
+                }
+                efContainer.innerHTML = efHtml;
+            }
+
+            // 2. Hungarian Table Rendering
+            let hTotalScore = 0;
+            if (results.assignment) {
+                const hTbody = document.getElementById("hungarian-tbody");
+                hTbody.innerHTML = results.assignment.map(assign => {
+                    const score = 100 - assign.cost;
+                    hTotalScore += score;
+                    return `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--accent-primary);">${assign.task}</td>
+                            <td>${assign.employee}</td>
+                            <td><strong style="color: var(--success);">${score.toFixed(1)}%</strong></td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById("hungarian-total-score").innerHTML = `Total Combined Score: <span style="color: var(--success); font-weight:700;">${hTotalScore.toFixed(1)}%</span>`;
+            }
+
+            // 3. Greedy Table Rendering
+            let gTotalScore = 0;
+            if (results.greedy) {
+                const gTbody = document.getElementById("greedy-tbody");
+                gTbody.innerHTML = results.greedy.map(assign => {
+                    const score = assign.score;
+                    gTotalScore += score;
+                    return `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--accent-primary);">${assign.task}</td>
+                            <td>${assign.employee}</td>
+                            <td><strong style="color: var(--warning);">${score.toFixed(1)}%</strong></td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById("greedy-total-score").innerHTML = `Total Combined Score: <span style="color: var(--warning); font-weight:700;">${gTotalScore.toFixed(1)}%</span>`;
+            }
+
+            // 4. Branch & Bound Rendering
+            if (results.bb) {
+                document.getElementById("bb-cost").textContent = results.bb.best_cost;
+                document.getElementById("bb-pruned").textContent = results.bb.nodes_pruned + " Node(s)";
+                
+                // Format mapping: [[row, col], ...] to readable string
+                if (results.bb.best_assignment && results.bb.best_assignment.length > 0) {
+                    const mappingStr = results.bb.best_assignment.map(arr => `(${arr[0]}➔${arr[1]})`).join(', ');
+                    document.getElementById("bb-mapping").textContent = mappingStr;
+                } else {
+                    document.getElementById("bb-mapping").textContent = "None";
+                }
+            }
+
+            // 5. Performance Analysis Calculation
+            const analysisCard = document.getElementById("analysis-card");
+            const numTasks = results.assignment ? results.assignment.length : 0;
+            const maxPossibleScore = numTasks * 100;
+            
+            const hCost = maxPossibleScore - hTotalScore;
+            const gCost = maxPossibleScore - gTotalScore;
+
+            let analysisHtml = `
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary);">Algorithmic Optimization Summary</h3>
+                <p style="line-height: 1.6; margin-bottom: 1rem;">
+                    The Kuhn-Munkres (Hungarian) assignment algorithm guarantees a global mathematically optimal assignment matching, whereas the Greedy baseline uses local heuristics (assigning the best available employee to each task in sequence).
+                </p>
+                <div style="display: flex; gap: 2rem; margin-bottom: 1rem;">
+                    <div>Hungarian Total Cost Index: <strong style="color: var(--success);">${hCost.toFixed(1)}</strong></div>
+                    <div>Greedy Total Cost Index: <strong style="color: var(--warning);">${gCost.toFixed(1)}</strong></div>
+                </div>
+            `;
+
+            if (gCost > hCost) {
+                const pctImprovement = ((gCost - hCost) / gCost) * 100;
+                analysisHtml += `
+                    <div style="background: rgba(52, 211, 153, 0.1); border: 1.5px solid rgba(52, 211, 153, 0.3); border-radius: 12px; padding: 1rem; color: var(--success);">
+                        <strong>💡 Success:</strong> The optimal Hungarian matcher outperformed the Greedy baseline by <strong>${pctImprovement.toFixed(1)}%</strong> (achieving a lower total assignment cost of ${hCost.toFixed(1)} vs ${gCost.toFixed(1)}).
+                    </div>
+                `;
+            } else {
+                analysisHtml += `
+                    <div style="background: rgba(129, 140, 248, 0.1); border: 1.5px solid rgba(129, 140, 248, 0.3); border-radius: 12px; padding: 1rem; color: var(--accent-primary);">
+                        <strong>💡 Insight:</strong> The Greedy baseline matched the optimal Hungarian allocation in this case (both achieved an identical assignment cost index of ${hCost.toFixed(1)}).
+                    </div>
+                `;
+            }
+            analysisCard.innerHTML = analysisHtml;
+        }
+    </script>
+</body>
+</html>
