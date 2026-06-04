@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Smart Workforce Optimizer</title>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/nav.js"></script>
+    <style>
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(16px);
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(129, 140, 248, 0.25);
+            box-shadow: var(--shadow-premium);
+        }
+        
+        .project-card.active-project {
+            border-color: var(--accent-primary);
+            background: rgba(129, 140, 248, 0.05);
+        }
+        
+        .project-card.active-project::before {
+            content: 'Active';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent-primary);
+            color: #0f172a;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        .project-header h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .project-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            min-height: 2.8rem;
+        }
+
+        .project-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 0.85rem;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .stat-lbl {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+        }
+
+        .project-actions button {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-section">
+        <h1>Project Manager</h1>
+        <p>Switch between self-contained workspaces. Each project maintains its own datasets, constraints, and optimization output.</p>
+        <button class="btn-primary" style="margin-top: 1.5rem;" onclick="openCreateModal()">➕ Create New Project</button>
+    </div>
+
+    <div class="projects-grid" id="projects-list-grid">
+        <!-- Dyn list -->
+    </div>
+
+    <!-- Create Modal -->
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Project</h3>
+                <button class="modal-close" onclick="closeModal('create-modal')">&times;</button>
+            </div>
+            <form id="create-project-form" onsubmit="handleCreateProject(event)">
+                <div class="form-group">
+                    <label for="new-project-name">Project Name</label>
+                    <input type="text" id="new-project-name" class="input-control" placeholder="e.g. Project Gamma" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-project-desc">Description</label>
+                    <input type="text" id="new-project-desc" class="input-control" placeholder="Brief outline of project scope" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Create Project</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Duplicate Modal -->
+    <div class="modal-overlay" id="duplicate-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Duplicate Project</h3>
+                <button class="modal-close" onclick="closeModal('duplicate-modal')">&times;</button>
+            </div>
+            <form id="duplicate-project-form" onsubmit="handleDuplicateProject(event)">
+                <input type="hidden" id="duplicate-source-id">
+                <div class="form-group">
+                    <label for="duplicate-new-name">Duplicate Name</label>
+                    <input type="text" id="duplicate-new-name" class="input-control" placeholder="e.g. Project Alpha (Copy)" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Duplicate</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            loadProjectsList();
+        });
+
+        async function loadProjectsList() {
+            const grid = document.getElementById("projects-list-grid");
+            try {
+                // Fetch active project
+                const activeRes = await fetch("/projects/active");
+                if (!activeRes.ok) throw new Error("Could not load active project");
+                const activeProj = await activeRes.json();
+
+                // Fetch list of all projects
+                const listRes = await fetch("/projects/");
+                if (!listRes.ok) throw new Error("Could not load projects list");
+                const list = await listRes.json();
+
+                grid.innerHTML = list.map(proj => {
+                    const isActive = proj.id === activeProj.id;
+                    const cardClass = isActive ? "project-card active-project" : "project-card";
+                    const statusText = proj.has_results ? "<span class='badge badge-success'>optimized</span>" : "<span class='badge badge-warning'>pending</span>";
+                    
+                    return `
+                        <div class="${cardClass}">
+                            <div class="project-header">
+                                <h3>${escapeHtml(proj.name)}</h3>
+                                ${statusText}
+                            </div>
+                            <p class="project-desc">${escapeHtml(proj.description)}</p>
+                            
+                            <div class="project-stats">
+                                <div class="stat-item">
+                                    <div class="stat-val">${proj.employees_count}</div>
+                                    <div class="stat-lbl">Employees</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-val">${proj.tasks_count}</div>
+                                    <div class="stat-lbl">Tasks</div>
+                                </div>
+                            </div>
+                            
+                            <div class="project-actions">
+                                ${!isActive ? `<button class="btn-primary" onclick="setProjectActive('${proj.id}')">Open</button>` : `<button class="btn-secondary" disabled>Selected</button>`}
+                                <button class="btn-secondary" onclick="openDuplicateModal('${proj.id}')" title="Duplicate">Duplicate</button>
+                                ${list.length > 1 ? `<button class="btn-secondary" style="border-color: var(--danger); color: var(--danger);" onclick="deleteProject('${proj.id}')" title="Delete">🗑</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = `
+                    <div class="empty-state" style="color: var(--danger);">
+                        <span class="empty-state-icon">⚠️</span>
+                        <span>Failed to load project database.</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function setProjectActive(projectId) {
+            try {
+                const res = await fetch(`/projects/active/${projectId}`, {
+                    method: "POST"
+                });
+                if (!res.ok) throw new Error("Failed to switch active project");
+                showToast("Workspace switched successfully!", "success");
+                await loadProjectsList();
+                // Reload navigation project dropdown as well
+                await loadProjectSelector();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById("create-modal").style.display = "flex";
+        }
+
+        function openDuplicateModal(sourceId) {
+            document.getElementById("duplicate-source-id").value = sourceId;
+            document.getElementById("duplicate-new-name").value = "";
+            document.getElementById("duplicate-modal").style.display = "flex";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        async function handleCreateProject(event) {
+            event.preventDefault();
+            const name = document.getElementById("new-project-name").value.trim();
+            const desc = document.getElementById("new-project-desc").value.trim();
+            const pid = name.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
+
+            try {
+                const res = await fetch("/projects/", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({id: pid, name: name, description: desc})
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Could not create project");
+                }
+                closeModal("create-modal");
+                document.getElementById("create-project-form").reset();
+                showToast(`Project "${name}" created successfully!`, "success");
+                await loadProjectsList();
+                await loadProjectSelector();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
+        }
+
+        async function handleDuplicateProject(event) {
+            event.preventDefault();
+            const sourceId = document.getElementById("duplicate-source-id").value;
+            const newName = document.getElementById("duplicate-new-name").value.trim();
+            const newPid = newName.toLowerCase().replace(/ /g, "_").replace(/[^a-z0-9_]/g, "");
+
+            try {
+                const res = await fetch(`/projects/duplicate/${sourceId}`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({new_id: newPid, new_name: newName})
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Could not duplicate project");
+                }
+                closeModal("duplicate-modal");
+                showToast("Project duplicated successfully!", "success");
+                await loadProjectsList();
+                await loadProjectSelector();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
+        }
+
+        async function deleteProject(projectId) {
+            if (!confirm(`Are you sure you want to delete project '${projectId}'? This action is irreversible.`)) return;
+            try {
+                const res = await fetch(`/projects/${projectId}`, {
+                    method: "DELETE"
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Could not delete project");
+                }
+                showToast("Project deleted successfully!", "success");
+                await loadProjectsList();
+                await loadProjectSelector();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
+        }
+    </script>
+</body>
+</html>

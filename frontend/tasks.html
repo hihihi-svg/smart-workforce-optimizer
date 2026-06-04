@@ -6,251 +6,513 @@
     <title>Tasks - Smart Workforce Optimizer</title>
     <!-- Outfit Font -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Shared CSS Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/nav.js"></script>
     <style>
-        /* Custom Toast Notification */
-        .toast {
-            display: none;
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: rgba(30, 41, 59, 0.9);
+        /* Split layout */
+        .tasks-split-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .tasks-split-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dag-container {
+            background: rgba(15, 23, 42, 0.5);
             border: 1px solid var(--card-border);
-            color: var(--text-primary);
-            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            height: 380px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dag-svg {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        .dag-svg:active {
+            cursor: grabbing;
+        }
+
+        .cycle-warning-banner {
+            display: none;
+            background: rgba(248, 113, 113, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
             border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .task-detail-tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            pointer-events: none;
+            display: none;
             z-index: 1000;
             box-shadow: var(--shadow-premium);
-            backdrop-filter: blur(8px);
-            animation: slideUp 0.3s ease-out;
         }
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+
+        .topo-cpm-status-strip {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .topo-cpm-status-strip div {
+            margin-bottom: 0.5rem;
+        }
+
+        .topo-cpm-status-strip div:last-child {
+            margin-bottom: 0;
+        }
+
+        .dag-node-text {
+            fill: var(--text-primary);
+            font-size: 11px;
+            font-weight: 700;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <a href="index.html" class="logo">Workforce Optimizer</a>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="employees.html">Employees</a>
-            <a href="tasks.html" class="active">Tasks</a>
-            <a href="search.html">Skill Search</a>
-            <a href="optimization.html">Optimization</a>
-            <a href="results.html">Results</a>
-        </nav>
-    </header>
+    <div class="hero-section">
+        <h1>Task & Dependency Manager</h1>
+        <p>Define project tasks, durations, required skill tags, and precedence constraints. Rebuild dependencies and topological sort orders dynamically.</p>
+    </div>
 
-    <div class="container">
-        <div class="hero-section">
-            <h1>Task & Dependency Management</h1>
-            <p>Define task profiles, durations, and dependency trees to build your project schedule.</p>
-        </div>
+    <!-- Cycle Warning -->
+    <div id="cycle-banner" class="cycle-warning-banner">
+        <span>⚠️</span>
+        <span id="cycle-banner-text">Cycle Detected in dependency graph! Topological sort is invalid.</span>
+    </div>
 
-        <div class="split-grid">
-            <!-- Left Side: Add Task Form -->
-            <div class="glass-panel">
+    <div class="tasks-split-grid">
+        <!-- Left Side: Task list table & Forms -->
+        <div>
+            <!-- Add Task Form -->
+            <div class="glass-panel" style="margin-bottom: 2rem;">
                 <h2>📋 Add New Task</h2>
                 <form id="task-form" onsubmit="handleAddTask(event)">
-                    <div class="form-group">
-                        <label for="task-id">Task ID</label>
-                        <input type="text" id="task-id" class="input-control" placeholder="e.g. T5" required>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="task-id">Task ID</label>
+                            <input type="text" id="task-id" class="input-control" placeholder="e.g. T05" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-duration">Duration (Days)</label>
+                            <input type="number" id="task-duration" class="input-control" min="1" max="100" value="4" required>
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="task-duration">Duration (Days)</label>
-                        <input type="number" id="task-duration" class="input-control" min="1" max="100" value="3" required>
-                    </div>
-
-                    <div class="form-group">
                         <label for="task-skills">Required Skills (Comma-separated)</label>
-                        <input type="text" id="task-skills" class="input-control" placeholder="e.g. Python, SQL" required>
+                        <input type="text" id="task-skills" class="input-control" placeholder="e.g. React, TypeScript" required>
                     </div>
 
                     <div class="form-group">
                         <label for="task-deps">Dependencies (Comma-separated Task IDs)</label>
-                        <input type="text" id="task-deps" class="input-control" placeholder="e.g. T1, T2 (Leave blank if none)">
+                        <input type="text" id="task-deps" class="input-control" placeholder="e.g. T01, T02 (leave empty if none)">
                     </div>
 
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Add Task</button>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 0.5rem;">Add Task</button>
                 </form>
             </div>
 
-            <!-- Right Side: Tasks Table -->
-            <div>
-                <h2 style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                    Project Task List
-                    <span class="badge badge-primary" id="tasks-count">0 Total</span>
-                </h2>
-                <div class="table-container">
+            <!-- Task List -->
+            <div class="glass-panel" style="padding: 1.5rem;">
+                <h2>Task Backlog</h2>
+                <div class="table-container" style="margin-top: 1rem;">
                     <table>
                         <thead>
                             <tr>
-                                <th>Task ID</th>
-                                <th>Required Skills</th>
+                                <th>ID</th>
+                                <th>Skills Needed</th>
                                 <th>Duration</th>
-                                <th>Dependencies</th>
+                                <th>Predecessors</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="tasks-tbody">
-                            <!-- Dynamic rendering -->
+                        <tbody id="tasks-table-body">
+                            <!-- dyn rows -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        <!-- Right Side: SVG Graph & Details -->
+        <div>
+            <div class="glass-panel" style="padding: 1.75rem;">
+                <h2>Interactive DAG Graph</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    Nodes are color-coded. Critical path nodes are outlined in red. Drag nodes to reposition.
+                </p>
+                <div class="dag-container">
+                    <svg class="dag-svg" id="dag-svg"></svg>
+                    <!-- Tooltip -->
+                    <div class="task-detail-tooltip" id="dag-tooltip"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Toast Component -->
-    <div id="toast-notification" class="toast"></div>
-
-    <footer>
-        &copy; 2026 Smart Workforce Optimizer. Powered by custom DAA algorithms.
-    </footer>
+    <!-- Bottom computed strip -->
+    <div class="topo-cpm-status-strip">
+        <div>🔄 <strong>Topological Execution Order:</strong> <span id="lbl-topo-order" style="color: var(--accent-primary); font-weight: 600;">-</span></div>
+        <div>🔴 <strong>Critical Path:</strong> <span id="lbl-cpm-path" style="color: var(--danger); font-weight: 600;">-</span> | ⏰ <strong>Min duration:</strong> <span id="lbl-cpm-duration" style="color: var(--text-primary); font-weight: 600;">-</span></div>
+    </div>
 
     <script>
-        let existingTaskIds = [];
+        let taskDataGlobal = {};
+        let activeResultsGlobal = null;
+        let isCyclePresent = false;
+        
+        // Node dragging state
+        let draggedNode = null;
+        let nodePositions = {};
 
         document.addEventListener("DOMContentLoaded", () => {
             loadTasks();
+            setupDragAndDrop();
         });
 
-        function showToast(message, type = "success") {
-            const toast = document.getElementById("toast-notification");
-            toast.textContent = message;
-            if (type === "success") {
-                toast.style.borderLeft = "4px solid var(--success)";
-            } else {
-                toast.style.borderLeft = "4px solid var(--danger)";
-            }
-            toast.style.display = "block";
-            setTimeout(() => {
-                toast.style.display = "none";
-            }, 3000);
-        }
-
         async function loadTasks() {
-            const tbody = document.getElementById("tasks-tbody");
-            const countBadge = document.getElementById("tasks-count");
-            
             try {
-                const response = await fetch("http://localhost:8000/tasks/");
-                if (!response.ok) throw new Error("Failed to fetch tasks");
-                const tasks = await response.json();
-                
-                existingTaskIds = Object.keys(tasks);
-                countBadge.textContent = `${existingTaskIds.length} Total`;
+                // Fetch tasks list
+                const taskRes = await fetch("/tasks/");
+                if (!taskRes.ok) throw new Error("Could not load tasks");
+                taskDataGlobal = await taskRes.json();
 
-                if (existingTaskIds.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 3rem;">
-                                No tasks added yet. Add a task using the form on the left.
-                            </td>
-                        </tr>
-                    `;
-                } else {
-                    tbody.innerHTML = existingTaskIds.map(t_id => {
-                        const info = tasks[t_id];
-                        const skills = info.required_skills.map(s => `<span class="badge badge-primary">${s}</span>`).join(' ');
-                        const deps = info.deps && info.deps.length > 0 
-                            ? info.deps.map(d => `<span class="badge badge-warning">${d}</span>`).join(' ') 
-                            : '<span style="color:#475569;">None</span>';
-                        
-                        return `
-                            <tr>
-                                <td style="font-weight: 600; color: var(--accent-primary);">${escapeHtml(t_id)}</td>
-                                <td>${skills}</td>
-                                <td>${info.duration} Day(s)</td>
-                                <td>${deps}</td>
-                            </tr>
-                        `;
-                    }).join('');
+                // Fetch optimization results to know the critical path
+                try {
+                    const optRes = await fetch("/optimize/run");
+                    if (optRes.ok) {
+                        activeResultsGlobal = await optRes.json();
+                        isCyclePresent = false;
+                        document.getElementById("cycle-banner").style.display = "none";
+                    } else {
+                        const errData = await optRes.json();
+                        if (errData.detail && errData.detail.includes("Cycle")) {
+                            isCyclePresent = true;
+                            document.getElementById("cycle-banner").style.display = "flex";
+                            document.getElementById("cycle-banner-text").textContent = errData.detail;
+                        }
+                        activeResultsGlobal = null;
+                    }
+                } catch (e) {
+                    activeResultsGlobal = null;
                 }
+
+                // Render table
+                renderTasksTable();
+
+                // Render DAG
+                initializePositions();
+                drawDAG();
+
+                // Render bottom strip
+                renderStatusStrip();
+
             } catch (err) {
                 console.error(err);
+                showToast("Failed to load tasks database", "danger");
+            }
+        }
+
+        function renderTasksTable() {
+            const tbody = document.getElementById("tasks-table-body");
+            const taskIds = Object.keys(taskDataGlobal);
+
+            if (taskIds.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; color: var(--danger); padding: 3rem;">
-                            Failed to connect to backend server.
+                        <td colspan="5" class="empty-state" style="text-align: center; border-bottom: none;">
+                            <span class="empty-state-icon">📋</span>
+                            <span>No tasks defined in this project.</span>
                         </td>
                     </tr>
                 `;
+                return;
+            }
+
+            tbody.innerHTML = taskIds.map(tid => {
+                const task = taskDataGlobal[tid];
+                const skillsHtml = (task.required_skills || []).map(s => `<span class="pill" style="padding: 0.15rem 0.5rem; font-size: 0.75rem;">${s}</span>`).join(" ");
+                const depsHtml = (task.deps || []).length > 0 ? (task.deps || []).map(d => `<span class="badge badge-primary">${d}</span>`).join(" ") : "<span style='color: var(--text-secondary); opacity: 0.5;'>None</span>";
+
+                return `
+                    <tr>
+                        <td><strong>${tid}</strong></td>
+                        <td>${skillsHtml}</td>
+                        <td>${task.duration} Days</td>
+                        <td>${depsHtml}</td>
+                        <td>
+                            <button class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; border-color: var(--danger); color: var(--danger);" onclick="deleteTaskRecord('${tid}')">🗑</button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        function initializePositions() {
+            const taskIds = Object.keys(taskDataGlobal);
+            const width = 450;
+            const height = 300;
+            
+            // Layout nodes in a circle or flow layer if they are not already placed
+            taskIds.forEach((tid, index) => {
+                if (!nodePositions[tid]) {
+                    // Circle placement fallback
+                    const angle = (index / (taskIds.length || 1)) * 2 * Math.PI;
+                    nodePositions[tid] = {
+                        x: 200 + Math.cos(angle) * 120,
+                        y: 180 + Math.sin(angle) * 100
+                    };
+                }
+            });
+        }
+
+        function drawDAG() {
+            const svg = document.getElementById("dag-svg");
+            svg.innerHTML = "";
+
+            const taskIds = Object.keys(taskDataGlobal);
+            if (taskIds.length === 0) {
+                svg.innerHTML = `<text x="200" y="200" text-anchor="middle" fill="var(--text-secondary)">Backlog empty. Add tasks to visualize graph.</text>`;
+                return;
+            }
+
+            // Arrow marker definition
+            svg.innerHTML += `
+                <defs>
+                    <marker id="dag-arrow" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#818cf8" />
+                    </marker>
+                    <marker id="dag-arrow-critical" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f87171" />
+                    </marker>
+                </defs>
+            `;
+
+            // Draw dependency lines (edges)
+            for (let tid of taskIds) {
+                const task = taskDataGlobal[tid];
+                const toNode = nodePositions[tid];
+                if (!toNode) continue;
+
+                (task.deps || []).forEach(depId => {
+                    const fromNode = nodePositions[depId];
+                    if (!fromNode) return;
+
+                    const isCriticalEdge = activeResultsGlobal && 
+                                           activeResultsGlobal.cpm.critical_tasks.includes(tid) && 
+                                           activeResultsGlobal.cpm.critical_tasks.includes(depId);
+                    
+                    const strokeColor = isCriticalEdge ? "var(--danger)" : "var(--accent-primary)";
+                    const marker = isCriticalEdge ? "url(#dag-arrow-critical)" : "url(#dag-arrow)";
+                    const strokeWidth = isCriticalEdge ? "3" : "2";
+
+                    svg.innerHTML += `
+                        <line class="viz-edge" 
+                              x1="${fromNode.x}" y1="${fromNode.y}" 
+                              x2="${toNode.x}" y2="${toNode.y}" 
+                              stroke="${strokeColor}" 
+                              stroke-width="${strokeWidth}" 
+                              marker-end="${marker}" />
+                    `;
+                });
+            }
+
+            // Draw task nodes
+            for (let tid of taskIds) {
+                const pos = nodePositions[tid];
+                if (!pos) continue;
+
+                const task = taskDataGlobal[tid];
+                const isCritical = activeResultsGlobal && activeResultsGlobal.cpm.critical_tasks.includes(tid);
+                const isCycleNode = isCyclePresent;
+
+                let borderClass = "";
+                if (isCycleNode) borderClass = "critical"; // Flashing red
+                else if (isCritical) borderClass = "critical"; // Outlined red
+
+                svg.innerHTML += `
+                    <g class="dag-node-group" 
+                       data-id="${tid}" 
+                       onmouseover="showTooltip(event, '${tid}')" 
+                       onmouseout="hideTooltip()">
+                        <circle class="viz-node ${borderClass}" 
+                                id="dag-node-${tid}"
+                                cx="${pos.x}" 
+                                cy="${pos.y}" 
+                                r="22" 
+                                style="cursor: grab;" />
+                        <text class="dag-node-text" x="${pos.x}" y="${pos.y}">${tid}</text>
+                    </g>
+                `;
+            }
+        }
+
+        // SVG Dragging implementation
+        function setupDragAndDrop() {
+            const svg = document.getElementById("dag-svg");
+            
+            svg.addEventListener("mousedown", e => {
+                const group = e.target.closest("g");
+                if (group) {
+                    draggedNode = group.getAttribute("data-id");
+                    document.getElementById(`dag-node-${draggedNode}`).style.cursor = "grabbing";
+                }
+            });
+
+            svg.addEventListener("mousemove", e => {
+                if (draggedNode) {
+                    const rect = svg.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    // Constrain within bounds
+                    nodePositions[draggedNode] = {
+                        x: Math.max(25, Math.min(rect.width - 25, x)),
+                        y: Math.max(25, Math.min(rect.height - 25, y))
+                    };
+                    drawDAG();
+                }
+            });
+
+            window.addEventListener("mouseup", () => {
+                if (draggedNode) {
+                    const node = document.getElementById(`dag-node-${draggedNode}`);
+                    if (node) node.style.cursor = "grab";
+                    draggedNode = null;
+                }
+            });
+        }
+
+        function showTooltip(e, tid) {
+            const tooltip = document.getElementById("dag-tooltip");
+            const task = taskDataGlobal[tid];
+            if (!task) return;
+
+            tooltip.innerHTML = `
+                <strong>Task ID:</strong> ${tid}<br>
+                <strong>Duration:</strong> ${task.duration} Days<br>
+                <strong>Required skills:</strong> ${task.required_skills.join(", ")}<br>
+                <strong>Dependencies:</strong> ${task.deps.join(", ") || 'None'}
+            `;
+            
+            const rect = document.getElementById("dag-svg").getBoundingClientRect();
+            tooltip.style.left = (nodePositions[tid].x + 30) + "px";
+            tooltip.style.top = (nodePositions[tid].y - 30) + "px";
+            tooltip.style.display = "block";
+        }
+
+        function hideTooltip() {
+            document.getElementById("dag-tooltip").style.display = "none";
+        }
+
+        function renderStatusStrip() {
+            const lblTopo = document.getElementById("lbl-topo-order");
+            const lblCpmPath = document.getElementById("lbl-cpm-path");
+            const lblCpmDur = document.getElementById("lbl-cpm-duration");
+
+            if (isCyclePresent) {
+                lblTopo.textContent = "Invalid DAG (Cycle Detected)";
+                lblTopo.style.color = "var(--danger)";
+                lblCpmPath.textContent = "N/A";
+                lblCpmDur.textContent = "N/A";
+            } else if (activeResultsGlobal) {
+                lblTopo.textContent = activeResultsGlobal.order.join(" → ");
+                lblTopo.style.color = "var(--accent-primary)";
+                lblCpmPath.textContent = activeResultsGlobal.cpm.critical_tasks.join(" → ") || "None";
+                lblCpmDur.textContent = activeResultsGlobal.cpm.project_duration + " Days";
+            } else {
+                lblTopo.textContent = "Empty Task Set";
+                lblCpmPath.textContent = "-";
+                lblCpmDur.textContent = "-";
             }
         }
 
         async function handleAddTask(event) {
             event.preventDefault();
-            
-            const task_id = document.getElementById("task-id").value.trim().toUpperCase();
-            const duration = parseInt(document.getElementById("task-duration").value);
+            const tid = document.getElementById("task-id").value.trim().toUpperCase();
+            const dur = parseInt(document.getElementById("task-duration").value);
             const skillsRaw = document.getElementById("task-skills").value.trim();
             const depsRaw = document.getElementById("task-deps").value.trim();
 
-            if (!task_id) return;
-            
-            if (existingTaskIds.includes(task_id)) {
-                showToast(`Error: Task ID "${task_id}" already exists.`, "danger");
-                return;
-            }
+            if (!tid) return;
 
-            const req_skills = skillsRaw.split(",").map(s => s.trim()).filter(s => s.length > 0);
-            
-            // Clean up and validate dependencies
-            const deps = depsRaw 
-                ? depsRaw.split(",").map(d => d.trim().toUpperCase()).filter(d => d.length > 0)
-                : [];
-            
-            for (let dep of deps) {
-                if (!existingTaskIds.includes(dep)) {
-                    showToast(`Error: Dependency "${dep}" does not exist in the task list. Please add it first.`, "danger");
-                    return;
-                }
-            }
-
-            const payload = {
-                task_id: task_id,
-                required_skills: req_skills,
-                duration: duration,
-                deps: deps
-            };
+            const skills = skillsRaw.split(",").map(s => s.trim()).filter(s => s.length > 0);
+            const deps = depsRaw ? depsRaw.split(",").map(d => d.trim().toUpperCase()).filter(d => d.length > 0) : [];
 
             try {
-                const response = await fetch("http://localhost:8000/tasks/", {
+                const res = await fetch("/tasks/", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({task_id: tid, duration: dur, required_skills: skills, deps: deps})
                 });
 
-                if (!response.ok) {
-                    const data = await response.json();
+                if (!res.ok) {
+                    const data = await res.json();
                     throw new Error(data.detail || "Failed to add task");
                 }
 
-                // Reset form and reload
                 document.getElementById("task-form").reset();
+                document.getElementById("task-duration").value = 4;
+                showToast(`Task "${tid}" added successfully!`, "success");
                 await loadTasks();
-                showToast(`Task "${task_id}" added successfully!`, "success");
-                
             } catch (err) {
-                console.error(err);
-                showToast(`Error: ${err.message}`, "danger");
+                showToast(err.message, "danger");
             }
         }
 
-        function escapeHtml(str) {
-            return str
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        async function deleteTaskRecord(tid) {
+            if (!confirm(`Are you sure you want to delete task "${tid}"?`)) return;
+
+            try {
+                const res = await fetch(`/tasks/${encodeURIComponent(tid)}`, {
+                    method: "DELETE"
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || "Failed to delete task");
+                }
+
+                showToast(`Task "${tid}" deleted!`, "success");
+                await loadTasks();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
         }
     </script>
 </body>

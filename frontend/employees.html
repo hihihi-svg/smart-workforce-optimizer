@@ -6,8 +6,8 @@
     <title>Employees - Smart Workforce Optimizer</title>
     <!-- Outfit Font -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Shared CSS Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/nav.js"></script>
     <style>
         .workload-slider-container {
             display: flex;
@@ -20,182 +20,263 @@
             color: var(--accent-primary);
             min-width: 3rem;
         }
-        /* Custom Toast Notification */
-        .toast {
-            display: none;
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: rgba(30, 41, 59, 0.9);
+        
+        .trie-status-strip {
+            background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--card-border);
-            color: var(--text-primary);
-            padding: 1rem 1.5rem;
             border-radius: 12px;
-            z-index: 1000;
-            box-shadow: var(--shadow-premium);
-            backdrop-filter: blur(8px);
-            animation: slideUp 0.3s ease-out;
+            padding: 1rem 1.5rem;
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        
+        .trie-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .emp-table-row {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .emp-table-row:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .slide-panel-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .slide-panel-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .slide-panel-val {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <a href="index.html" class="logo">Workforce Optimizer</a>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="employees.html" class="active">Employees</a>
-            <a href="tasks.html">Tasks</a>
-            <a href="search.html">Skill Search</a>
-            <a href="optimization.html">Optimization</a>
-            <a href="results.html">Results</a>
-        </nav>
-    </header>
+    <div class="hero-section">
+        <h1>Employee Management</h1>
+        <p>Review the team profiles available for project assignments. Click a row to open detail stats, edit skills, or delete records.</p>
+    </div>
 
-    <div class="container">
-        <div class="hero-section">
-            <h1>Employee Management</h1>
-            <p>View existing workforce profiles and add new employees to your resource pool.</p>
+    <div class="split-grid">
+        <!-- Left Side: Add Employee Form -->
+        <div class="glass-panel">
+            <h2>👤 Add New Employee</h2>
+            <form id="employee-form" onsubmit="handleAddEmployee(event)">
+                <div class="form-group">
+                    <label for="emp-name">Employee Name</label>
+                    <input type="text" id="emp-name" class="input-control" placeholder="e.g. Aarav Shah" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emp-experience">Experience (Years)</label>
+                    <input type="number" id="emp-experience" class="input-control" min="0" max="40" value="5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emp-workload">Current Workload (%)</label>
+                    <div class="workload-slider-container">
+                        <input type="range" id="emp-workload" class="input-control" min="0" max="100" value="30" oninput="updateWorkloadDisplay(this.value)">
+                        <span class="workload-val-display" id="workload-display">30%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="emp-skills">Skills (Comma-separated)</label>
+                    <input type="text" id="emp-skills" class="input-control" placeholder="e.g. Python, ML, TensorFlow" required>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Add Employee</button>
+            </form>
         </div>
 
-        <div class="split-grid">
-            <!-- Left Side: Add Employee Form -->
-            <div class="glass-panel">
-                <h2>👤 Add New Employee</h2>
-                <form id="employee-form" onsubmit="handleAddEmployee(event)">
-                    <div class="form-group">
-                        <label for="emp-name">Employee Name</label>
-                        <input type="text" id="emp-name" class="input-control" placeholder="e.g. Ramesh Kumar" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="emp-experience">Experience (Years)</label>
-                        <input type="number" id="emp-experience" class="input-control" min="0" max="40" value="2" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="emp-workload">Current Workload (%)</label>
-                        <div class="workload-slider-container">
-                            <input type="range" id="emp-workload" class="input-control" min="0" max="100" value="30" oninput="updateWorkloadDisplay(this.value)">
-                            <span class="workload-val-display" id="workload-display">30%</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="emp-skills">Skills (Comma-separated)</label>
-                        <input type="text" id="emp-skills" class="input-control" placeholder="e.g. Python, ML, SQL" required>
-                    </div>
-
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Add Employee</button>
-                </form>
-            </div>
-
-            <!-- Right Side: Employee list -->
-            <div>
-                <h2 style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                    Workforce Profiles
-                    <span class="badge badge-primary" id="employees-count">0 Total</span>
-                </h2>
-                <div class="grid" id="employees-grid">
-                    <!-- Dynamic rendering -->
-                </div>
+        <!-- Right Side: Employee table -->
+        <div class="glass-panel" style="padding: 1.75rem;">
+            <h2 style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                Workforce Directory
+                <span class="badge badge-primary" id="employees-count">0 Total</span>
+            </h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Skills</th>
+                            <th>Exp</th>
+                            <th>Workload</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employees-table-body">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Toast Component -->
-    <div id="toast-notification" class="toast"></div>
+    <!-- Trie status strip at the bottom -->
+    <div class="trie-status-strip">
+        <div>🌲 Trie Index Status: <strong style="color: var(--text-primary);">Constructed</strong></div>
+        <div id="trie-indexed-lbl">Loading skills...</div>
+        <div class="trie-status-badge">⚡ Trie Ready | O(N·L) Complexity</div>
+    </div>
 
-    <footer>
-        &copy; 2026 Smart Workforce Optimizer. Powered by custom DAA algorithms.
-    </footer>
+    <!-- Detail Slide-in Panel -->
+    <div class="detail-panel" id="employee-detail-panel">
+        <button class="detail-panel-close" onclick="closeDetailPanel()">&times;</button>
+        <h2 style="margin-bottom: 2rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem;">Employee Profile</h2>
+        
+        <div class="slide-panel-field">
+            <div class="slide-panel-label">Full Name</div>
+            <div class="slide-panel-val" id="detail-name">-</div>
+        </div>
+
+        <div class="slide-panel-field">
+            <div class="slide-panel-label">Experience</div>
+            <div class="slide-panel-val" id="detail-experience">-</div>
+        </div>
+
+        <div class="slide-panel-field">
+            <div class="slide-panel-label">Skills & Expertise</div>
+            <div class="pill-container" id="detail-skills">
+                <!-- skills -->
+            </div>
+        </div>
+
+        <div class="slide-panel-field">
+            <div class="slide-panel-label">Current Workload</div>
+            <div class="progress-container" style="margin-top: 0.5rem;">
+                <div class="progress-label">
+                    <span id="detail-workload-text">-</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="detail-workload-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form Section (Hidden by default, toggled via edit button) -->
+        <div id="edit-section" style="display: none; border-top: 1px solid var(--card-border); padding-top: 1.5rem; margin-top: 2rem;">
+            <h3>Edit Profile Details</h3>
+            <div class="form-group" style="margin-top: 1rem;">
+                <label for="edit-emp-experience">Experience (Years)</label>
+                <input type="number" id="edit-emp-experience" class="input-control" min="0" max="40">
+            </div>
+            <div class="form-group">
+                <label for="edit-emp-workload">Current Workload (%)</label>
+                <input type="number" id="edit-emp-workload" class="input-control" min="0" max="100">
+            </div>
+            <div class="form-group">
+                <label for="edit-emp-skills">Skills (Comma-separated)</label>
+                <input type="text" id="edit-emp-skills" class="input-control">
+            </div>
+            <button class="btn-primary" style="width:100%; margin-bottom: 0.75rem;" onclick="saveEmployeeEdit()">Save Changes</button>
+            <button class="btn-secondary" style="width:100%;" onclick="toggleEditMode(false)">Cancel</button>
+        </div>
+
+        <!-- Default Profile Actions -->
+        <div id="profile-actions-section" style="margin-top: 3rem; display: flex; gap: 0.75rem;">
+            <button class="btn-primary" style="flex-grow: 1;" onclick="toggleEditMode(true)">✏️ Edit Details</button>
+            <button class="btn-secondary" style="border-color: var(--danger); color: var(--danger);" onclick="deleteEmployeeRecord()">🗑 Delete</button>
+        </div>
+    </div>
 
     <script>
+        let currentSelectedEmployee = null;
+
         document.addEventListener("DOMContentLoaded", () => {
-            loadEmployees();
+            loadEmployeesTable();
         });
 
         function updateWorkloadDisplay(val) {
             document.getElementById("workload-display").textContent = val + "%";
         }
 
-        function showToast(message, type = "success") {
-            const toast = document.getElementById("toast-notification");
-            toast.textContent = message;
-            if (type === "success") {
-                toast.style.borderLeft = "4px solid var(--success)";
-            } else {
-                toast.style.borderLeft = "4px solid var(--danger)";
-            }
-            toast.style.display = "block";
-            setTimeout(() => {
-                toast.style.display = "none";
-            }, 3000);
-        }
-
-        async function loadEmployees() {
-            const grid = document.getElementById("employees-grid");
+        async function loadEmployeesTable() {
+            const tbody = document.getElementById("employees-table-body");
             const countBadge = document.getElementById("employees-count");
             
             try {
-                const response = await fetch("http://localhost:8000/employees/");
+                const response = await fetch("/employees/");
                 if (!response.ok) throw new Error("Failed to fetch employees");
                 const employees = await response.json();
                 
                 countBadge.textContent = `${employees.length} Total`;
 
+                // Calculate unique skills count for Trie index display
+                const allSkillsSet = new Set();
+                employees.forEach(emp => {
+                    (emp.skills || []).forEach(s => allSkillsSet.add(s.trim().toLowerCase()));
+                });
+                document.getElementById("trie-indexed-lbl").textContent = `${allSkillsSet.size} unique skills indexed in Trie`;
+
                 if (employees.length === 0) {
-                    grid.innerHTML = `
-                        <div class="empty-state">
-                            <span class="empty-state-icon">👥</span>
-                            <span>No employees added to the database yet.</span>
-                        </div>
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="empty-state" style="text-align: center; border-bottom: none;">
+                                <span class="empty-state-icon">👥</span>
+                                <span>No employees added to the database yet.</span>
+                            </td>
+                        </tr>
                     `;
                 } else {
-                    grid.innerHTML = employees.map(emp => {
-                        // Workload color coding
+                    tbody.innerHTML = employees.map(emp => {
                         let barColor = 'var(--success)';
-                        if (emp.workload > 70) {
+                        if (emp.workload > 80) {
                             barColor = 'var(--danger)';
-                        } else if (emp.workload > 40) {
+                        } else if (emp.workload >= 60) {
                             barColor = 'var(--warning)';
                         }
 
-                        const skillsHtml = emp.skills.map(s => `<span class="pill">${s}</span>`).join('');
+                        const skillsHtml = emp.skills.slice(0, 3).map(s => `<span class="pill" style="padding: 0.15rem 0.5rem; font-size: 0.75rem;">${s}</span>`).join(' ') + 
+                                           (emp.skills.length > 3 ? ` <span class="badge badge-primary">+${emp.skills.length - 3}</span>` : "");
 
                         return `
-                            <div class="item-card">
-                                <h3 class="item-title">${escapeHtml(emp.name)}</h3>
-                                <div class="item-subtitle">${emp.experience} Year(s) Experience</div>
-                                
-                                <div class="progress-container">
-                                    <div class="progress-label">
-                                        <span>Current Workload</span>
-                                        <span>${emp.workload}%</span>
+                            <tr class="emp-table-row" onclick="openDetailPanel(${JSON.stringify(emp).replace(/"/g, '&quot;')})">
+                                <td><strong>${escapeHtml(emp.name)}</strong></td>
+                                <td>${skillsHtml}</td>
+                                <td>${emp.experience} yrs</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 100px;">
+                                        <div class="progress-bar-bg" style="flex-grow: 1; height: 6px;">
+                                            <div class="progress-bar-fill" style="width: ${emp.workload}%; background-color: ${barColor}"></div>
+                                        </div>
+                                        <span style="font-size: 0.8rem; font-weight: 600;">${emp.workload}%</span>
                                     </div>
-                                    <div class="progress-bar-bg">
-                                        <div class="progress-bar-fill" style="width: ${emp.workload}%; background-color: ${barColor}"></div>
-                                    </div>
-                                </div>
-                                
-                                <div class="pill-container">
-                                    ${skillsHtml}
-                                </div>
-                            </div>
+                                </td>
+                            </tr>
                         `;
                     }).join('');
                 }
             } catch (err) {
                 console.error(err);
-                grid.innerHTML = `
-                    <div class="empty-state" style="color: var(--danger);">
-                        <span class="empty-state-icon">⚠️</span>
-                        <span>Failed to connect to the backend server.</span>
-                    </div>
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state" style="color: var(--danger); text-align: center; border-bottom: none;">
+                            <span class="empty-state-icon">⚠️</span>
+                            <span>Failed to connect to the backend server.</span>
+                        </td>
+                    </tr>
                 `;
             }
         }
@@ -212,20 +293,11 @@
 
             const skills = skillsRaw.split(",").map(s => s.trim()).filter(s => s.length > 0);
 
-            const payload = {
-                name: name,
-                experience: exp,
-                workload: workload,
-                skills: skills
-            };
-
             try {
-                const response = await fetch("http://localhost:8000/employees/", {
+                const response = await fetch("/employees/", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({name, experience: exp, workload, skills})
                 });
 
                 if (!response.ok) {
@@ -238,22 +310,108 @@
                 document.getElementById("workload-display").textContent = "30%";
                 document.getElementById("emp-workload").value = 30;
                 
-                await loadEmployees();
+                await loadEmployeesTable();
                 showToast(`Employee "${name}" added successfully!`, "success");
                 
             } catch (err) {
-                console.error(err);
                 showToast(`Error: ${err.message}`, "danger");
             }
         }
 
-        function escapeHtml(str) {
-            return str
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        function openDetailPanel(employee) {
+            currentSelectedEmployee = employee;
+            document.getElementById("detail-name").textContent = employee.name;
+            document.getElementById("detail-experience").textContent = `${employee.experience} Year(s) Experience`;
+            
+            // Skills tags
+            const skillsContainer = document.getElementById("detail-skills");
+            skillsContainer.innerHTML = employee.skills.map(s => `<span class="pill">${s}</span>`).join('');
+            
+            // Workload
+            document.getElementById("detail-workload-text").textContent = `${employee.workload}% current workload allocation`;
+            const bar = document.getElementById("detail-workload-bar");
+            bar.style.width = `${employee.workload}%`;
+            
+            let barColor = 'var(--success)';
+            if (employee.workload > 80) barColor = 'var(--danger)';
+            else if (employee.workload >= 60) barColor = 'var(--warning)';
+            bar.style.backgroundColor = barColor;
+
+            // Hide edit form, show default profile actions
+            toggleEditMode(false);
+            
+            document.getElementById("employee-detail-panel").classList.add("open");
+        }
+
+        function closeDetailPanel() {
+            document.getElementById("employee-detail-panel").classList.remove("open");
+            currentSelectedEmployee = null;
+        }
+
+        function toggleEditMode(enable) {
+            const editSection = document.getElementById("edit-section");
+            const actionsSection = document.getElementById("profile-actions-section");
+            
+            if (enable && currentSelectedEmployee) {
+                editSection.style.display = "block";
+                actionsSection.style.display = "none";
+                
+                document.getElementById("edit-emp-experience").value = currentSelectedEmployee.experience;
+                document.getElementById("edit-emp-workload").value = currentSelectedEmployee.workload;
+                document.getElementById("edit-emp-skills").value = currentSelectedEmployee.skills.join(", ");
+            } else {
+                editSection.style.display = "none";
+                actionsSection.style.display = "flex";
+            }
+        }
+
+        async function saveEmployeeEdit() {
+            if (!currentSelectedEmployee) return;
+            const exp = parseInt(document.getElementById("edit-emp-experience").value);
+            const workload = parseInt(document.getElementById("edit-emp-workload").value);
+            const skillsRaw = document.getElementById("edit-emp-skills").value.trim();
+            const skills = skillsRaw.split(",").map(s => s.trim()).filter(s => s.length > 0);
+
+            try {
+                const res = await fetch(`/employees/${encodeURIComponent(currentSelectedEmployee.name)}`, {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({skills, experience: exp, workload})
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || "Failed to update employee details");
+                }
+
+                showToast(`Employee "${currentSelectedEmployee.name}" updated!`, "success");
+                closeDetailPanel();
+                await loadEmployeesTable();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
+        }
+
+        async function deleteEmployeeRecord() {
+            if (!currentSelectedEmployee) return;
+            if (!confirm(`Are you sure you want to delete employee "${currentSelectedEmployee.name}"?`)) return;
+
+            try {
+                const res = await fetch(`/employees/${encodeURIComponent(currentSelectedEmployee.name)}`, {
+                    method: "DELETE"
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || "Failed to delete employee");
+                }
+
+                showToast(`Employee "${currentSelectedEmployee.name}" deleted!`, "success");
+                closeDetailPanel();
+                await loadEmployeesTable();
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
         }
     </script>
 </body>

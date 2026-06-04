@@ -5,6 +5,7 @@ from routes.search import router as search_router
 from routes.employees import router as employees_router
 from routes.tasks import router as tasks_router
 from routes.optimize import router as optimize_router
+from routes.projects import router as projects_router
 import os
 
 app = FastAPI(title="Smart Workforce Optimizer API")
@@ -23,6 +24,7 @@ app.include_router(search_router, prefix="/search")
 app.include_router(employees_router, prefix="/employees")
 app.include_router(tasks_router, prefix="/tasks")
 app.include_router(optimize_router, prefix="/optimize")
+app.include_router(projects_router, prefix="/projects")
 
 # Mount frontend static files at / so that index.html, search.html, etc. are served directly
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))

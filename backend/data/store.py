@@ -1,5 +1,6 @@
 from data.employees import employees as default_employees
 from data.tasks import tasks as default_tasks
+import copy
 
 # Multi-project store dictionary holding dynamic data for self-contained projects
 projects = {
@@ -70,5 +71,74 @@ current_project_id = "project_alpha"
 def get_current_project():
     global current_project_id
     if current_project_id not in projects:
-        current_project_id = list(projects.keys())[0]
+        if projects:
+            current_project_id = list(projects.keys())[0]
+        else:
+            # Create a fallback empty project
+            create_project("default_project", "Default Project", "Auto-generated default project")
+            current_project_id = "default_project"
     return projects[current_project_id]
+
+def set_current_project(project_id: str):
+    global current_project_id
+    if project_id in projects:
+        current_project_id = project_id
+        return True
+    return False
+
+def create_project(project_id: str, name: str, description: str):
+    if project_id in projects:
+        return False
+    projects[project_id] = {
+        "id": project_id,
+        "name": name,
+        "description": description,
+        "employees": [],
+        "tasks": {},
+        "results": None,
+        "settings": {
+            "top_k": 3,
+            "weights": {
+                "skill_match": 0.4,
+                "experience": 0.3,
+                "workload_penalty": 0.2,
+                "estimated_time": 0.1
+            },
+            "max_workload": 80,
+            "min_experience": 0,
+            "availability_filter": True,
+            "run_greedy": True,
+            "run_hungarian": True,
+            "run_bb": True,
+            "bb_max_depth": 50,
+            "animation_speed": "Fast"
+        }
+    }
+    return True
+
+def duplicate_project(source_id: str, new_id: str, new_name: str):
+    if source_id not in projects or new_id in projects:
+        return False
+    source = projects[source_id]
+    projects[new_id] = {
+        "id": new_id,
+        "name": new_name,
+        "description": f"Duplicate of {source['name']}",
+        "employees": copy.deepcopy(source["employees"]),
+        "tasks": copy.deepcopy(source["tasks"]),
+        "results": copy.deepcopy(source["results"]),
+        "settings": copy.deepcopy(source["settings"])
+    }
+    return True
+
+def delete_project(project_id: str):
+    global current_project_id
+    if project_id not in projects:
+        return False
+    del projects[project_id]
+    if current_project_id == project_id:
+        if projects:
+            current_project_id = list(projects.keys())[0]
+        else:
+            current_project_id = None
+    return True
