@@ -113,6 +113,22 @@
         <button class="btn-primary" style="margin-top: 1.5rem;" onclick="openCreateModal()">➕ Create New Project</button>
     </div>
 
+    <!-- Quick Import / Samples Panel -->
+    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; margin-top: 1.5rem; backdrop-filter: blur(16px); display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; justify-content: space-between;">
+        <div>
+            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);">⚡ Instant Sample Templates</h3>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Load complete predefined datasets or upload your own JSON project file.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <button class="btn-secondary" onclick="loadPredefinedSample('software')">💻 Software Team SDLC</button>
+            <button class="btn-secondary" onclick="loadPredefinedSample('construction')">🏗️ Construction Pipeline</button>
+            <div style="position: relative; overflow: hidden; display: inline-block;">
+                <button class="btn-primary">📤 Upload Custom JSON</button>
+                <input type="file" id="json-file-input" accept=".json" style="position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;" onchange="handleJsonUpload(event)">
+            </div>
+        </div>
+    </div>
+
     <div class="projects-grid" id="projects-list-grid">
         <!-- Dyn list -->
     </div>
@@ -312,6 +328,59 @@
                 await loadProjectSelector();
             } catch (err) {
                 showToast(err.message, "danger");
+            }
+        }
+
+        async function loadPredefinedSample(type) {
+            const filename = type === 'software' ? 'software_project.json' : 'construction_project.json';
+            try {
+                const response = await fetch(`samples/${filename}`);
+                if (!response.ok) throw new Error(`Could not fetch sample dataset: ${filename}`);
+                const data = await response.json();
+                await importProjectData(data);
+            } catch (err) {
+                showToast(err.message, "danger");
+            }
+        }
+
+        async function handleJsonUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    await importProjectData(data);
+                } catch (err) {
+                    showToast("Invalid JSON file format: " + err.message, "danger");
+                }
+            };
+            reader.readAsText(file);
+            // Reset input so file change event fires if uploading same file again
+            event.target.value = "";
+        }
+
+        async function importProjectData(payload) {
+            try {
+                const res = await fetch("/projects/import", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Import endpoint failed");
+                }
+                const result = await res.json();
+                showToast(result.message, "success");
+                // Clear cached results from local storage
+                localStorage.removeItem('optimization_results');
+                // Reload projects and select the active project in navigation
+                await loadProjectsList();
+                await loadProjectSelector();
+            } catch (err) {
+                showToast(`Import error: ${err.message}`, "danger");
             }
         }
     </script>

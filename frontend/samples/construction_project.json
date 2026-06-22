@@ -1,0 +1,74 @@
+{
+  "name": "Residential Construction Pipeline",
+  "description": "Housing structural build featuring foundation, framing, electrical, plumbing, and safety check.",
+  "employees": [
+    {
+      "name": "David Architect",
+      "skills": ["Design", "Blueprints", "CAD"],
+      "experience": 12,
+      "workload": 10
+    },
+    {
+      "name": "Elena Civil",
+      "skills": ["Concrete", "Foundation", "Safety"],
+      "experience": 9,
+      "workload": 30
+    },
+    {
+      "name": "Frank Carpenter",
+      "skills": ["Woodwork", "Framing", "Roofing"],
+      "experience": 6,
+      "workload": 25
+    },
+    {
+      "name": "George Electrician",
+      "skills": ["Wiring", "Grid", "Electric"],
+      "experience": 7,
+      "workload": 40
+    },
+    {
+      "name": "Hannah Plumber",
+      "skills": ["Pipes", "Plumbing", "Drainage"],
+      "experience": 5,
+      "workload": 50
+    }
+  ],
+  "tasks": {
+    "T1": {
+      "name": "Approve Architectural Plan",
+      "required_skills": ["Blueprints", "Design"],
+      "duration": 4,
+      "deps": []
+    },
+    "T2": {
+      "name": "Excavation & Foundation",
+      "required_skills": ["Concrete", "Foundation"],
+      "duration": 8,
+      "deps": ["T1"]
+    },
+    "T3": {
+      "name": "Framing & Wall Structure",
+      "required_skills": ["Woodwork", "Framing"],
+      "duration": 7,
+      "deps": ["T2"]
+    },
+    "T4": {
+      "name": "Electrical & Grid Wiring",
+      "required_skills": ["Wiring", "Grid", "Electric"],
+      "duration": 5,
+      "deps": ["T3"]
+    },
+    "T5": {
+      "name": "Plumbing & Drainage Pipes",
+      "required_skills": ["Pipes", "Plumbing"],
+      "duration": 6,
+      "deps": ["T3"]
+    },
+    "T6": {
+      "name": "Final Building Safety Inspection",
+      "required_skills": ["Safety", "Blueprints"],
+      "duration": 3,
+      "deps": ["T4", "T5"]
+    }
+  }
+}

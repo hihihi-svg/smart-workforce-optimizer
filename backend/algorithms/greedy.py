@@ -35,7 +35,8 @@ def greedy_assignment(
                 assignments.append({
                     "task": task["id"],
                     "employee": best_employee["name"],
-                    "score": round(best_score, 2)
+                    "score": round(best_score, 2),
+                    "cost": round(100 - best_score, 2)
                 })
                 available.remove(best_employee)
         return assignments

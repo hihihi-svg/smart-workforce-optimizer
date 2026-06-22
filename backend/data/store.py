@@ -7,7 +7,7 @@ projects = {
     "project_alpha": {
         "id": "project_alpha",
         "name": "Project Alpha (Enterprise)",
-        "description": "Large-scale enterprise workforce assignment (100 employees, 20 tasks)",
+        "description": "Smart Workforce Optimizer — 25 employees, 10 tasks, full DAG pipeline",
         "employees": [dict(emp) for emp in default_employees],
         "tasks": {k: dict(v) for k, v in default_tasks.items()},
         "results": None,

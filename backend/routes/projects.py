@@ -85,81 +85,117 @@ def remove_project(project_id: str):
     if delete_project(project_id):
         return {"message": f"Project '{project_id}' deleted successfully!"}
     raise HTTPException(status_code=404, detail=f"Project '{project_id}' not found.")
+class ProjectImport(BaseModel):
+    name: str
+    description: str
+    employees: List[Dict[str, Any]]
+    tasks: Dict[str, Dict[str, Any]]
+
+@router.post("/import")
+def import_project(payload: ProjectImport):
+    name_clean = payload.name.strip()
+    if not name_clean:
+        raise HTTPException(status_code=400, detail="Project name cannot be empty.")
+    
+    pid = name_clean.lower().replace(" ", "_")
+    pid = "".join([c for c in pid if c.isalnum() or c == "_"])
+    if not pid:
+        pid = f"imported_project_{random.randint(1000, 9999)}"
+        
+    if pid in projects:
+        pid = f"{pid}_{random.randint(100, 999)}"
+        
+    # Validation of employees format
+    for emp in payload.employees:
+        if "name" not in emp or "skills" not in emp:
+            raise HTTPException(status_code=400, detail="Each employee must have a 'name' and 'skills' list.")
+        if not isinstance(emp["skills"], list):
+            raise HTTPException(status_code=400, detail=f"Employee '{emp.get('name')}' skills must be a list of strings.")
+        emp["experience"] = int(emp.get("experience", 0))
+        emp["workload"] = int(emp.get("workload", 0))
+            
+    # Validation of tasks format
+    for tid, task in payload.tasks.items():
+        if "name" not in task:
+            task["name"] = f"Task {tid}"
+        if "required_skills" not in task:
+            task["required_skills"] = []
+        if "duration" not in task:
+            task["duration"] = 1
+        if "deps" not in task:
+            task["deps"] = []
+            
+        if not isinstance(task["required_skills"], list):
+            raise HTTPException(status_code=400, detail=f"Task '{tid}' required_skills must be a list of strings.")
+        if not isinstance(task["deps"], list):
+            raise HTTPException(status_code=400, detail=f"Task '{tid}' deps must be a list of task ID strings.")
+            
+        task["duration"] = int(task["duration"])
+        
+        # Check task dependencies exist in payload.tasks keys
+        for dep in task["deps"]:
+            if dep not in payload.tasks:
+                raise HTTPException(status_code=400, detail=f"Task '{tid}' depends on non-existent task '{dep}'.")
+
+    # Create the project entry
+    projects[pid] = {
+        "id": pid,
+        "name": name_clean,
+        "description": payload.description or "Imported custom dataset",
+        "employees": payload.employees,
+        "tasks": payload.tasks,
+        "results": None,
+        "settings": {
+            "top_k": 3,
+            "weights": {
+                "skill_match": 0.4,
+                "experience": 0.3,
+                "workload_penalty": 0.2,
+                "estimated_time": 0.1
+            },
+            "max_workload": 80,
+            "min_experience": 0,
+            "availability_filter": True,
+            "run_greedy": True,
+            "run_hungarian": True,
+            "run_bb": True,
+            "bb_max_depth": 50,
+            "animation_speed": "Fast"
+        }
+    }
+    
+    # Switch to this project
+    set_current_project(pid)
+    
+    return {
+        "message": f"Project '{name_clean}' imported successfully!",
+        "project_id": pid,
+        "employees_count": len(payload.employees),
+        "tasks_count": len(payload.tasks)
+    }
 
 @router.post("/synthesize")
 def synthesize_data():
     project = get_current_project()
-    
-    first_names = [
-        "Aarav", "Aditi", "Amit", "Ananya", "Arjun", "Neha", "Rahul", "Priya", "Rohan", "Sneha",
-        "Vikram", "Divya", "Sanjay", "Kiran", "Rajesh", "Suresh", "Mahesh", "Ramesh", "Karan", "Pooja",
-        "Deepak", "Jyoti", "Abhishek", "Ritu", "Alok", "Shalini", "Sunil", "Preeti", "Vijay", "Anjali"
-    ]
-    last_names = [
-        "Sharma", "Verma", "Gupta", "Kumar", "Singh", "Patel", "Reddy", "Nair", "Joshi", "Rao",
-        "Mehra", "Sen", "Roy", "Das", "Choudhury"
-    ]
-    skills_frontend = ["React", "TypeScript", "HTML", "CSS", "UI/UX", "Figma"]
-    skills_backend = ["Java", "Spring Boot", "Node", "Python", "SQL", "C++"]
-    skills_devops = ["DevOps", "AWS", "Docker", "Kubernetes", "Linux"]
-    skills_ai = ["Python", "ML", "Data Science", "PyTorch", "SQL"]
-    skills_qa = ["QA", "Selenium", "Testing"]
-    
-    all_skill_pools = [skills_frontend, skills_backend, skills_devops, skills_ai, skills_qa]
-    all_skills = list(set(skills_frontend + skills_backend + skills_devops + skills_ai + skills_qa))
-    
-    # Generate 100 employees
-    employee_names = set()
-    random.seed(42)
-    while len(employee_names) < 100:
-        fn = random.choice(first_names)
-        ln = random.choice(last_names)
-        employee_names.add(f"{fn} {ln}")
-    employee_names = sorted(list(employee_names))
-    
-    employees_list = []
-    for name in employee_names:
-        pool = random.choice(all_skill_pools)
-        num_skills = random.randint(2, 4)
-        skills = list(set(random.sample(pool, min(num_skills, len(pool)))))
-        experience = random.randint(1, 15)
-        workload = random.randint(0, 80)
-        employees_list.append({
-            "name": name,
-            "skills": skills,
-            "experience": experience,
-            "workload": workload
-        })
-        
-    # Generate 20 tasks
-    tasks_dict = {}
-    for i in range(1, 21):
-        task_id = f"T{i}"
-        duration = random.randint(2, 7)
-        num_req_skills = random.randint(1, 3)
-        required_skills = list(set(random.sample(all_skills, min(num_req_skills, len(all_skills)))))
-        
-        deps = []
-        if i > 1:
-            num_deps = random.choices([0, 1, 2], weights=[0.4, 0.4, 0.2])[0]
-            if num_deps > 0:
-                potential_deps = [f"T{j}" for j in range(1, i)]
-                deps = sorted(list(set(random.sample(potential_deps, min(num_deps, len(potential_deps))))))
-                
-        tasks_dict[task_id] = {
-            "required_skills": required_skills,
-            "duration": duration,
-            "deps": deps
-        }
-        
+
+    from data.employees import employees as canonical_employees
+    from data.tasks import tasks as canonical_tasks
+    import copy
+
+    employees_list = [dict(emp) for emp in canonical_employees]
+    tasks_dict     = {k: dict(v) for k, v in canonical_tasks.items()}
+
     project["employees"] = employees_list
-    project["tasks"] = tasks_dict
-    project["results"] = None # Reset results
-    
+    project["tasks"]     = tasks_dict
+    project["results"]   = None
+
     return {
-        "message": f"Successfully synthesized 100 employees and 20 tasks for active project '{project['name']}'!",
+        "message": (
+            f"Loaded canonical dataset: {len(employees_list)} employees and "
+            f"{len(tasks_dict)} tasks into '{project['name']}'."
+        ),
         "employees_count": len(employees_list),
-        "tasks_count": len(tasks_dict)
+        "tasks_count":     len(tasks_dict)
     }
 
 @router.post("/active/settings")

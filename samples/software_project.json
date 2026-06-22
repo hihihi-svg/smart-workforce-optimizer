@@ -1,0 +1,80 @@
+{
+  "name": "Software Development Lifecycle",
+  "description": "Standard software build containing frontend, backend, testing, and cloud deployment steps.",
+  "employees": [
+    {
+      "name": "Sarah Connor",
+      "skills": ["React", "TypeScript", "CSS", "Figma"],
+      "experience": 8,
+      "workload": 30
+    },
+    {
+      "name": "John Connor",
+      "skills": ["Python", "FastAPI", "SQL", "Docker"],
+      "experience": 6,
+      "workload": 20
+    },
+    {
+      "name": "Marcus Wright",
+      "skills": ["Docker", "Kubernetes", "AWS", "Terraform"],
+      "experience": 10,
+      "workload": 15
+    },
+    {
+      "name": "Kyle Reese",
+      "skills": ["QA", "Testing", "Selenium", "Python"],
+      "experience": 5,
+      "workload": 40
+    },
+    {
+      "name": "Kate Brewster",
+      "skills": ["React", "TypeScript", "Figma", "UI/UX"],
+      "experience": 4,
+      "workload": 50
+    }
+  ],
+  "tasks": {
+    "T1": {
+      "name": "Design Wireframes",
+      "required_skills": ["Figma", "UI/UX"],
+      "duration": 3,
+      "deps": []
+    },
+    "T2": {
+      "name": "Frontend Dashboard UI",
+      "required_skills": ["React", "TypeScript"],
+      "duration": 5,
+      "deps": ["T1"]
+    },
+    "T3": {
+      "name": "Backend REST APIs",
+      "required_skills": ["Python", "FastAPI"],
+      "duration": 6,
+      "deps": ["T1"]
+    },
+    "T4": {
+      "name": "Database Schema Setup",
+      "required_skills": ["SQL", "Python"],
+      "duration": 2,
+      "deps": []
+    },
+    "T5": {
+      "name": "Integrate API with Frontend",
+      "required_skills": ["React", "TypeScript", "Python"],
+      "duration": 4,
+      "deps": ["T2", "T3"]
+    },
+    "T6": {
+      "name": "Automation Testing & QA",
+      "required_skills": ["QA", "Testing", "Selenium"],
+      "duration": 4,
+      "deps": ["T5"]
+    },
+    "T7": {
+      "name": "CI/CD Pipeline & Deploy",
+      "required_skills": ["AWS", "Docker", "Kubernetes"],
+      "duration": 3,
+      "deps": ["T6", "T4"]
+    }
+  }
+}

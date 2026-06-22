@@ -1,102 +1,71 @@
 tasks = {
+    # ── No dependencies (start nodes) ───────────────────────────────
     "T1": {
-        "required_skills": ['ML', 'Kubernetes', 'Node'],
+        "name": "ML Model Training",
+        "required_skills": ["ML", "Python"],
         "duration": 6,
         "deps": []
     },
     "T2": {
-        "required_skills": ['Data Science', 'Docker'],
+        "name": "Backend API Development",
+        "required_skills": ["Python", "SQL", "Node"],
         "duration": 5,
-        "deps": ['T1']
+        "deps": []
     },
     "T3": {
-        "required_skills": ['Kubernetes', 'HTML', 'Spring Boot'],
+        "name": "Frontend UI Build",
+        "required_skills": ["React", "TypeScript", "CSS"],
         "duration": 4,
-        "deps": ['T1', 'T2']
+        "deps": []
     },
     "T4": {
-        "required_skills": ['ML', 'Linux', 'Figma'],
-        "duration": 4,
+        "name": "Infrastructure Setup",
+        "required_skills": ["Docker", "Kubernetes", "Linux"],
+        "duration": 3,
         "deps": []
     },
     "T5": {
-        "required_skills": ['DevOps'],
-        "duration": 2,
-        "deps": ['T4']
-    },
-    "T6": {
-        "required_skills": ['ML'],
+        "name": "Data Pipeline",
+        "required_skills": ["Data Science", "Python", "SQL"],
         "duration": 4,
         "deps": []
+    },
+
+    # ── Depend on T1 or T2 ──────────────────────────────────────────
+    "T6": {
+        "name": "Model Evaluation & Tuning",
+        "required_skills": ["ML", "PyTorch", "Python"],
+        "duration": 5,
+        "deps": ["T1", "T5"]
     },
     "T7": {
-        "required_skills": ['Linux', 'QA', 'Docker'],
-        "duration": 4,
-        "deps": []
+        "name": "API Integration & Testing",
+        "required_skills": ["QA", "Selenium", "Node"],
+        "duration": 3,
+        "deps": ["T2", "T3"]
     },
+
+    # ── Depend on infra ──────────────────────────────────────────────
     "T8": {
-        "required_skills": ['QA', 'CSS', 'UI/UX'],
+        "name": "Cloud Deployment",
+        "required_skills": ["AWS", "Docker", "DevOps"],
         "duration": 4,
-        "deps": ['T5']
+        "deps": ["T4", "T7"]
     },
+
+    # ── UI/UX + QA ──────────────────────────────────────────────────
     "T9": {
-        "required_skills": ['C++', 'Linux', 'SQL'],
+        "name": "UI/UX Polish & Accessibility",
+        "required_skills": ["Figma", "React", "UI/UX"],
         "duration": 3,
-        "deps": []
+        "deps": ["T3"]
     },
+
+    # ── Final integration ────────────────────────────────────────────
     "T10": {
-        "required_skills": ['Docker', 'Data Science', 'UI/UX'],
+        "name": "End-to-End QA & Sign-off",
+        "required_skills": ["QA", "Testing", "Selenium"],
         "duration": 4,
-        "deps": []
-    },
-    "T11": {
-        "required_skills": ['PyTorch', 'React'],
-        "duration": 7,
-        "deps": ['T10', 'T9']
-    },
-    "T12": {
-        "required_skills": ['Linux', 'Kubernetes'],
-        "duration": 5,
-        "deps": []
-    },
-    "T13": {
-        "required_skills": ['Python', 'Kubernetes', 'SQL'],
-        "duration": 5,
-        "deps": []
-    },
-    "T14": {
-        "required_skills": ['QA', 'DevOps', 'UI/UX'],
-        "duration": 3,
-        "deps": ['T1', 'T10']
-    },
-    "T15": {
-        "required_skills": ['Selenium', 'Node'],
-        "duration": 3,
-        "deps": ['T5']
-    },
-    "T16": {
-        "required_skills": ['AWS', 'Selenium', 'Java'],
-        "duration": 3,
-        "deps": ['T6', 'T8']
-    },
-    "T17": {
-        "required_skills": ['Python', 'QA'],
-        "duration": 5,
-        "deps": []
-    },
-    "T18": {
-        "required_skills": ['Java', 'React'],
-        "duration": 3,
-        "deps": ['T13']
-    },
-    "T19": {
-        "required_skills": ['Docker'],
-        "duration": 6,
-        "deps": []
-    },
-    "T20": {
-        "required_skills": ['PyTorch', 'Spring Boot'],
-        "duration": 4,
-        "deps": ['T1', 'T18']
+        "deps": ["T6", "T8", "T9"]
     },
 }
