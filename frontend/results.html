@@ -97,8 +97,15 @@
 <body>
 
     <div class="hero-section">
-        <h1>Results & Comparative Analytics</h1>
-        <p>Review final task assignments board and evaluate algorithm efficiency charts.</p>
+        <h1>Results & Performance Metrics</h1>
+        <p>Review the optimized task-to-employee assignments and project schedule timeline.</p>
+    </div>
+
+    <!-- Quick Help Banner -->
+    <div class="alert-panel alert-panel-info" style="border-radius: 12px; margin-bottom: 2rem; padding: 1.25rem;">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+            💡 <strong>Results Guide:</strong> The assignments below represent the optimal configuration that minimizes team burnout and maximizes task suitability. You can check the workload adjustments and Gantt schedule charts below the board.
+        </p>
     </div>
 
     <!-- Results wrapper -->
@@ -124,18 +131,6 @@
                 <h3>Workload Balancing Impact (Before vs After)</h3>
                 <div class="results-chart-container">
                     <canvas id="chartWorkloadCompare"></canvas>
-                </div>
-            </div>
-            <div class="results-chart-panel">
-                <h3>Global Assignment Cost Comparison</h3>
-                <div class="results-chart-container">
-                    <canvas id="chartCostCompare"></canvas>
-                </div>
-            </div>
-            <div class="results-chart-panel">
-                <h3>Solver Execution Time (Seconds)</h3>
-                <div class="results-chart-container">
-                    <canvas id="chartTimeCompare"></canvas>
                 </div>
             </div>
             <div class="results-chart-panel">
@@ -206,10 +201,8 @@
                 const empRes = await fetch("/employees/");
                 const employees = await empRes.json();
 
-                // Render all 4 charts
+                // Render charts
                 renderWorkloadCompareChart(employees, results);
-                renderCostCompareChart(results);
-                renderTimeCompareChart(results);
                 renderGanttTimelineChart(results);
 
                 // Populate metrics table
@@ -297,65 +290,7 @@
             });
         }
 
-        function renderCostCompareChart(results) {
-            const ctx = document.getElementById('chartCostCompare').getContext('2d');
-            if (chartCost) chartCost.destroy();
 
-            const greedyCost = results.greedy.reduce((sum, a) => sum + (a.cost || 0), 0);
-            const hungCost = results.assignment.reduce((sum, a) => sum + (a.cost || 0), 0);
-            const bbCost = results.bb.best_cost !== "N/A" ? results.bb.best_cost : hungCost;
-
-            chartCost = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Greedy', 'Hungarian', 'Branch & Bound'],
-                    datasets: [{
-                        label: 'Total Cost Penalty sum (lower is better)',
-                        data: [greedyCost, hungCost, bbCost],
-                        backgroundColor: ['#fbbf24', '#818cf8', '#34d399']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { ticks: { color: '#94a3b8' } },
-                        x: { ticks: { color: '#94a3b8' } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-
-        function renderTimeCompareChart(results) {
-            const ctx = document.getElementById('chartTimeCompare').getContext('2d');
-            if (chartTime) chartTime.destroy();
-
-            // Mock values based on size to show comparative complexity orders
-            chartTime = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Trie Search', 'Greedy', 'Hungarian', 'Branch & Bound'],
-                    datasets: [{
-                        data: [0.0001, 0.002, 0.015, results.bb.best_cost === "N/A" ? 0 : 0.12],
-                        backgroundColor: '#818cf8',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { 
-                            type: 'logarithmic',
-                            ticks: { color: '#94a3b8' } 
-                        },
-                        x: { ticks: { color: '#94a3b8' } }
-                    },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
 
         function renderGanttTimelineChart(results) {
             const ctx = document.getElementById('chartGanttTimeline').getContext('2d');
@@ -423,10 +358,6 @@
                 <tr>
                     <td><strong>Global Match Improvement</strong></td>
                     <td style="color: var(--success); font-weight: 700;">🟢 ${imp}% improvement over Greedy</td>
-                </tr>
-                <tr>
-                    <td><strong>Branch & Bound Validation Status</strong></td>
-                    <td>${results.bb.status} (nodes pruned: ${results.bb.nodes_pruned})</td>
                 </tr>
             `;
         }

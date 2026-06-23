@@ -55,16 +55,8 @@ else:
             st.table(g_data)
             st.write(f"**Total Combined Score:** {g_total_score:.2f}%")
             
-        # 3. Show B&B Validation if present
-        if "bb" in results:
-            st.write("### 3. Optimal Validation (Branch & Bound)")
-            bb = results["bb"]
-            st.write(f"**Branch & Bound Optimal Cost:** {bb['best_cost']}")
-            st.write(f"**B&B Optimal Index Mapping:** {bb['best_assignment']}")
-            st.write(f"**Nodes Pruned (Saved Calculations):** {bb['nodes_pruned']}")
-            
-        # 4. Summary Analysis
-        st.write("### 4. Summary Analysis")
+        # 3. Summary Analysis
+        st.write("### 3. Summary Analysis")
         # Estimate number of tasks dynamically to get correct max cost metric
         num_tasks = len(results["hungarian"])
         max_possible_score = num_tasks * 100

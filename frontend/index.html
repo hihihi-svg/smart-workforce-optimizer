@@ -149,9 +149,17 @@
 </head>
 <body>
 
-    <div class="hero-section" style="text-align: left; margin-bottom: 2rem;">
-        <h1 id="active-proj-title">Project Alpha Dashboard</h1>
-        <p id="active-proj-desc">Enterprise workforce scheduling optimization view</p>
+    <div class="hero-section" style="text-align: left; margin-bottom: 1.5rem;">
+        <h1 id="active-proj-title">Smart Workforce Optimizer</h1>
+        <p id="active-proj-desc">Manage employees, define task schedules, and perform optimal assignments using core algorithms.</p>
+    </div>
+
+    <!-- Quick Explanation Banner -->
+    <div class="alert-panel alert-panel-info" style="border-radius: 12px; margin-bottom: 2rem; padding: 1.5rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">💡 Welcome to the Workforce Optimizer</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+            This system helps plan complex projects. First, we arrange tasks in the correct order based on dependencies using **Kahn's Topological Sort**. Next, we calculate the minimum duration and task slacks using the **Critical Path Method (CPM)**. Finally, we assign eligible employees to tasks to minimize suitability penalties using the **Hungarian Algorithm**.
+        </p>
     </div>
 
     <!-- Row 1: 5 Stat Cards -->
@@ -159,25 +167,25 @@
         <div class="stat-card">
             <div class="stat-title">Employees</div>
             <div class="stat-number" id="kpi-employees">-</div>
-            <div class="stat-sub" id="kpi-employees-sub">+2 active today</div>
+            <div class="stat-sub" id="kpi-employees-sub">Workforce size</div>
         </div>
         <div class="stat-card">
-            <div class="stat-title">Tasks</div>
+            <div class="stat-title">Project Tasks</div>
             <div class="stat-number" id="kpi-tasks">-</div>
-            <div class="stat-sub" style="color: var(--warning);" id="kpi-tasks-sub">4 pending assignment</div>
+            <div class="stat-sub" style="color: var(--warning);" id="kpi-tasks-sub">Pending assignment</div>
         </div>
         <div class="stat-card">
-            <div class="stat-title">Critical Path</div>
+            <div class="stat-title">Project Duration</div>
             <div class="stat-number" id="kpi-cpm">-</div>
-            <div class="stat-sub" style="color: var(--danger);" id="kpi-cpm-sub">CPM schedule window</div>
+            <div class="stat-sub" style="color: var(--danger);" id="kpi-cpm-sub">CPM critical window</div>
         </div>
         <div class="stat-card">
-            <div class="stat-title">Assigned Engine</div>
+            <div class="stat-title">Optimization Engine</div>
             <div class="stat-number" style="font-size: 1.5rem; padding: 0.25rem 0;" id="kpi-engine">Hungarian</div>
-            <div class="stat-sub" style="color: var(--accent-primary);">Global Optimal Match</div>
+            <div class="stat-sub" style="color: var(--accent-primary);">Kuhn-Munkres Solver</div>
         </div>
         <div class="stat-card">
-            <div class="stat-title">Avg Workload</div>
+            <div class="stat-title">Average Workload</div>
             <div class="stat-number" id="kpi-workload">-</div>
             <div class="stat-sub" id="kpi-workload-sub">Balanced distribution</div>
         </div>
@@ -213,15 +221,15 @@
             <div class="feed-container" id="activity-feed">
                 <!-- Dyn Feed -->
                 <div class="feed-item">
-                    <div><span class="feed-icon">✅</span>T01 matched to Aarav Shah (Hungarian)</div>
+                    <div><span class="feed-icon">✅</span>Task T01 matched to Aarav Shah (Hungarian)</div>
                     <span class="feed-time">2m ago</span>
                 </div>
                 <div class="feed-item">
-                    <div><span class="feed-icon">🔴</span>T04 flagged as critical scheduling node</div>
+                    <div><span class="feed-icon">🔴</span>Task T04 flagged on the Critical Path</div>
                     <span class="feed-time">5m ago</span>
                 </div>
                 <div class="feed-item">
-                    <div><span class="feed-icon">🔍</span>Skill searched: "React" prefix hops traversed</div>
+                    <div><span class="feed-icon">📋</span>Tasks dependency tree validated successfully</div>
                     <span class="feed-time">12m ago</span>
                 </div>
                 <div class="feed-item">

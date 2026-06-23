@@ -53,21 +53,10 @@ if st.button("Run Resource Assignment"):
             st.session_state.optimization_results = {}
         st.session_state.optimization_results["hungarian"] = assignments
         
-        # Also run greedy and branch-and-bound internally to keep Results page populated
+        # Also run greedy internally to keep Results page populated
         from algorithms.greedy import greedy_assignment
-        from algorithms.branch_and_bound import build_cost_matrix, branch_and_bound
-        import sys
         
         greedy_assignments = greedy_assignment(employees, tasks, calculate_score)
         st.session_state.optimization_results["greedy"] = greedy_assignments
-        
-        cost_matrix = build_cost_matrix(employees, tasks, calculate_score)
-        branch_and_bound(cost_matrix)
-        bb_module = sys.modules['algorithms.branch_and_bound']
-        st.session_state.optimization_results["bb"] = {
-            "best_cost": bb_module.best_cost,
-            "best_assignment": bb_module.best_assignment,
-            "nodes_pruned": bb_module.nodes_pruned
-        }
     except Exception as e:
         st.error(f"Error assigning tasks: {e}")

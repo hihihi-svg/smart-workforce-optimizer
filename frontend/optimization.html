@@ -64,7 +64,48 @@
 
     <div class="hero-section">
         <h1>Optimization Engine Pipeline</h1>
-        <p>Trigger Kuhn-Munkres (Hungarian), CPM, and Branch & Bound solvers. Analyze the mathematical state changes at each step.</p>
+        <p>Trigger Kahn's Sort, CPM scheduler, and Hungarian optimal matching solvers. Analyze the mathematical state changes at each step.</p>
+    </div>
+
+    <!-- Algorithm Theory Quick Reference (Collapsible) -->
+    <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <details>
+            <summary style="font-size: 1.15rem; font-weight: 600; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary);">
+                📖 DAA Algorithm Concept Cheat Sheet (Click to Expand)
+            </summary>
+            <div style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.85rem; border-top: 1px solid var(--card-border); padding-top: 1.5rem;">
+                <div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">🔄 Part 1: Kahn's Topological Sort</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                        <strong>Concept:</strong> Orders task nodes linearly based on precedence constraints (DAG).<br>
+                        <strong>Logic:</strong> Scans tasks with <code>0 dependencies (in-degree)</code>, schedules them first, and reduces the dependency counts of neighboring nodes. Warns if a dependency loop (cycle) exists.<br>
+                        <strong>Complexity:</strong> <code>O(V + E)</code> where V=vertices (tasks) and E=edges (dependencies).
+                    </p>
+                    
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">⏰ Part 2: Critical Path Method (CPM)</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        <strong>Concept:</strong> Calculates earliest and latest start/finish days for each task.<br>
+                        <strong>Logic:</strong> Forward pass finds earliest days; backward pass finds latest days. <strong>Slack = Latest Start - Earliest Start</strong>. Tasks with <code>Slack = 0</code> are on the Critical Path (cannot be delayed).<br>
+                        <strong>Complexity:</strong> <code>O(V + E)</code>.
+                    </p>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">🧮 Part 3: Employee Suitability Scoring</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                        <strong>Concept:</strong> Scores fit penalty for each task-employee cell (lower is better).<br>
+                        <strong>Logic:</strong> Uses a <strong>Trie (prefix tree)</strong> to lookup skills in <code>O(L)</code>. Scores based on matching skills, experience, and workload. Keeps best candidate profiles using a <strong>Min-Heap</strong>.<br>
+                        <strong>Complexity:</strong> <code>O(T * N log K)</code> where T=tasks, N=candidates, K=Heap capacity.
+                    </p>
+                    
+                    <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;">⚡ Part 4: Hungarian Algorithm</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">
+                        <strong>Concept:</strong> Pair tasks with employees to minimize overall penalty sum.<br>
+                        <strong>Logic:</strong> Normalizes the cost matrix using row/column minimum subtractions to expose zero-cost cells. Finds the optimal independent matching. Guarantees global minimum cost.<br>
+                        <strong>Complexity:</strong> <code>O(N³)</code> where N is candidate pool size.
+                    </p>
+                </div>
+            </div>
+        </details>
     </div>
 
     <!-- Optimization Trigger action bar -->
@@ -87,10 +128,6 @@
         <div class="pipeline-step" id="step-cost"><span>🧮</span> Cost Matrix</div>
         <div class="pipeline-step-arrow">&rarr;</div>
         <div class="pipeline-step" id="step-hung"><span>⚡</span> Hungarian Solver</div>
-        <div class="pipeline-step-arrow">&rarr;</div>
-        <div class="pipeline-step" id="step-bb"><span>🌳</span> B&B Validate</div>
-        <div class="pipeline-step-arrow">&rarr;</div>
-        <div class="pipeline-step" id="step-greedy"><span>⚖️</span> Greedy Baseline</div>
     </div>
 
     <!-- Pipeline details content (Visible after run) -->
@@ -101,16 +138,14 @@
             <button class="tab-btn" onclick="switchTab('cpm')">⏰ CPM Float</button>
             <button class="tab-btn" onclick="switchTab('cost')">🧮 Cost Heatmap</button>
             <button class="tab-btn" onclick="switchTab('hung')">⚡ Hungarian Steps</button>
-            <button class="tab-btn" onclick="switchTab('greedy')">⚖️ Greedy Compare</button>
-            <button class="tab-btn" onclick="switchTab('bb')">🌳 Branch & Bound</button>
         </div>
 
         <!-- Tab 1: Topological Sort -->
         <div class="tab-content active" id="pane-topo">
             <div class="glass-panel" style="padding: 1.75rem;">
-                <h2>Kahn's Topological Process Trace</h2>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
-                    Decounters node in-degrees dynamically to resolve correct dependencies queue order.
+                <h2>🔄 Kahn's Topological Order Calculation</h2>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+                    💡 <strong>What is this?</strong> Topological Sort orders tasks so that no task is scheduled before its predecessors are completed. Kahn's Algorithm does this by finding start tasks with 0 dependencies (in-degree), adding them to the queue, and removing their edges to reduce neighbor dependency counts.
                 </p>
                 <div class="trace-console" id="trace-topo-log"></div>
             </div>
@@ -119,7 +154,10 @@
         <!-- Tab 2: CPM Float -->
         <div class="tab-content" id="pane-cpm">
             <div class="glass-panel" style="padding: 1.75rem;">
-                <h2>Critical Path Method Analysis</h2>
+                <h2>⏰ Critical Path Method (CPM) Schedule</h2>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+                    💡 <strong>What is this?</strong> CPM calculates the earliest start (ES) and latest start (LS) days for each task. The <strong>Slack (Float)</strong> is the buffer time (LS - ES). Tasks with <strong>0 Slack</strong> are critical; delay there will delay the entire project.
+                </p>
                 <div class="table-container" style="margin-bottom: 2rem;">
                     <table>
                         <thead>
@@ -149,19 +187,19 @@
         <!-- Tab 3: Cost Matrix -->
         <div class="tab-content" id="pane-cost">
             <div class="glass-panel" style="padding: 1.75rem;">
-                <h2>N x M Suitability Heatmap</h2>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
-                    Displays cost penalty value (100 - suitability_score) for each task-employee cell. Green represents best fits; Red represents worst fits.
+                <h2>🧮 Employee-Task Suitability Matrix</h2>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+                    💡 <strong>What is this?</strong> This matrix shows the compatibility cost penalty (100 - suitability score) of each employee for each task. Suitability is calculated based on skill matching, years of experience, and workload balances. Green cells represent a good match; red cells represent a poor match.
                 </p>
                 <div class="heatmap-scroll-wrapper">
                     <table class="matrix-table" id="heatmap-table">
                         <!-- Heatmap cells -->
                     </table>
                 </div>
-                <div class="heatmap-legend">
-                    <div><span class="legend-box" style="background: rgba(52, 211, 153, 0.45);"></span> Best Match (Cost &lt; 20)</div>
-                    <div><span class="legend-box" style="background: rgba(251, 191, 36, 0.45);"></span> Average Match (Cost 20 - 60)</div>
-                    <div><span class="legend-box" style="background: rgba(248, 113, 113, 0.45);"></span> Poor Match (Cost &gt; 60)</div>
+                <div class="heatmap-legend" style="margin-top: 1rem;">
+                    <div><span class="legend-box" style="background: rgba(52, 211, 153, 0.45);"></span> Best Match (Cost &lt; 20 / Suitability &gt; 80%)</div>
+                    <div><span class="legend-box" style="background: rgba(251, 191, 36, 0.45);"></span> Average Match (Cost 20 - 60 / Suitability 40 - 80%)</div>
+                    <div><span class="legend-box" style="background: rgba(248, 113, 113, 0.45);"></span> Poor Match (Cost &gt; 60 / Suitability &lt; 40%)</div>
                 </div>
             </div>
         </div>
@@ -169,7 +207,10 @@
         <!-- Tab 4: Hungarian Steps -->
         <div class="tab-content" id="pane-hung">
             <div class="glass-panel" style="padding: 1.75rem;">
-                <h2>Hungarian Reductions Trace</h2>
+                <h2>⚡ Hungarian Solver (Kuhn-Munkres)</h2>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+                    💡 <strong>What is this?</strong> Bipartite matching algorithm. It does row and column reductions to isolate zeros, covers zeros with lines to check optimality, and selects assignments to minimize the overall sum of cost penalties across all tasks.
+                </p>
                 <div class="trace-console" id="trace-hungarian-log" style="margin-bottom: 2rem;"></div>
                 <h2>Optimal Assignments Result</h2>
                 <div class="table-container">
@@ -186,42 +227,6 @@
                             <!-- assignments -->
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 5: Greedy Compare -->
-        <div class="tab-content" id="pane-greedy">
-            <div class="glass-panel" style="padding: 1.75rem;">
-                <h2>Greedy Baseline vs Hungarian Kuhn-Munkres</h2>
-                <div class="table-container" style="margin-bottom: 2rem;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Task ID</th>
-                                <th>Greedy Assigned</th>
-                                <th>Greedy Cost</th>
-                                <th>Hungarian Assigned</th>
-                                <th>Hungarian Cost</th>
-                                <th>Difference</th>
-                            </tr>
-                        </thead>
-                        <tbody id="greedy-compare-body">
-                            <!-- comparisons -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="trace-console" id="greedy-compare-summary"></div>
-            </div>
-        </div>
-
-        <!-- Tab 6: Branch & Bound -->
-        <div class="tab-content" id="pane-bb">
-            <div class="glass-panel" style="padding: 1.75rem;">
-                <h2>Branch & Bound Verification</h2>
-                <div class="trace-console" id="trace-bb-log" style="margin-bottom: 2rem;"></div>
-                <div class="alert-panel alert-panel-info" id="bb-status-banner">
-                    <!-- status -->
                 </div>
             </div>
         </div>
@@ -372,51 +377,6 @@
                     </tr>
                 `;
             }).join("");
-
-            // 5. Greedy Comparison
-            const greedyBody = document.getElementById("greedy-compare-body");
-            let greedyTotalCost = 0;
-            let hungarianTotalCost = 0;
-
-            greedyBody.innerHTML = results.assignment.map((a, idx) => {
-                const g = results.greedy[idx] || { employee: "N/A", cost: 100 };
-                greedyTotalCost += g.cost;
-                hungarianTotalCost += a.cost;
-                
-                const costDiff = g.cost - a.cost;
-                let diffText = costDiff === 0 ? "Same" : costDiff > 0 ? `<span style='color: var(--success);'>🟢 Hungarian (+${costDiff})</span>` : `<span style='color: var(--danger);'>🔴 Greedy (+${Math.abs(costDiff)})</span>`;
-
-                return `
-                    <tr>
-                        <td><strong>${a.task}</strong></td>
-                        <td>${escapeHtml(g.employee)}</td>
-                        <td>${g.cost}</td>
-                        <td>${escapeHtml(a.employee)}</td>
-                        <td>${a.cost}</td>
-                        <td>${diffText}</td>
-                    </tr>
-                `;
-            }).join("");
-
-            const impPercentage = greedyTotalCost > 0 ? Math.round(((greedyTotalCost - hungarianTotalCost) / greedyTotalCost) * 100) : 0;
-            const compSummary = document.getElementById("greedy-compare-summary");
-            compSummary.innerHTML = `Greedy Total Cost Penalty:    <strong>${greedyTotalCost}</strong><br>` +
-                                    `Hungarian Total Cost Penalty: <strong>${hungarianTotalCost}</strong><br>` +
-                                    `Improvement percentage:       <strong style="color: var(--success);">${impPercentage}% better assignment quality</strong><br>` +
-                                    `Hungarian Kuhn-Munkres resolves local conflicts and guarantees a globally optimal match.`;
-
-            // 6. Branch & Bound
-            const bbLog = document.getElementById("trace-bb-log");
-            bbLog.innerHTML = results.bb_trace.map(line => `&gt; ${escapeHtml(line)}`).join("<br>");
-            
-            const banner = document.getElementById("bb-status-banner");
-            if (results.bb.status.includes("Validated")) {
-                banner.className = "alert-panel alert-panel-success";
-                banner.innerHTML = `<strong>Branch & Bound Validation Successful:</strong> The exponential explorer successfully matched the Hungarian optimal value of <strong>${results.bb.best_cost}</strong> cost penalty units. Nodes pruned: <strong>${results.bb.nodes_pruned}</strong>.`;
-            } else {
-                banner.className = "alert-panel alert-panel-info";
-                banner.innerHTML = `<strong>Branch & Bound Validation:</strong> ${results.bb.status}`;
-            }
         }
     </script>
 </body>

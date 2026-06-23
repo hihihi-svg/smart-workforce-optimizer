@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from routes.search import router as search_router
 from routes.employees import router as employees_router
 from routes.tasks import router as tasks_router
 from routes.optimize import router as optimize_router
@@ -20,7 +19,6 @@ app.add_middleware(
 )
 
 # Register API routers first
-app.include_router(search_router, prefix="/search")
 app.include_router(employees_router, prefix="/employees")
 app.include_router(tasks_router, prefix="/tasks")
 app.include_router(optimize_router, prefix="/optimize")

@@ -106,13 +106,20 @@
 
     <div class="hero-section">
         <h1>Task & Dependency Manager</h1>
-        <p>Define project tasks, durations, required skill tags, and precedence constraints. Rebuild dependencies and topological sort orders dynamically.</p>
+        <p>Define project tasks, durations, skills, and predecessor constraints. View the dependency graph (DAG) live.</p>
+    </div>
+
+    <!-- Quick Help Banner -->
+    <div class="alert-panel alert-panel-info" style="border-radius: 12px; margin-bottom: 2rem; padding: 1.25rem;">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+            💡 <strong>Precedence Constraints (DAG):</strong> Tasks must follow a strict order (e.g. "T2 depends on T1" means T1 must finish before T2 starts). The system builds a Directed Acyclic Graph (DAG) and runs **Kahn's Topological Sort** to ensure there are no infinite dependency loops (cycles).
+        </p>
     </div>
 
     <!-- Cycle Warning -->
     <div id="cycle-banner" class="cycle-warning-banner">
         <span>⚠️</span>
-        <span id="cycle-banner-text">Cycle Detected in dependency graph! Topological sort is invalid.</span>
+        <span id="cycle-banner-text">Loop (Cycle) Detected! Your task dependencies form a loop, making schedule calculations impossible. Please remove cyclic dependencies.</span>
     </div>
 
     <div class="tasks-split-grid">
@@ -174,7 +181,7 @@
             <div class="glass-panel" style="padding: 1.75rem;">
                 <h2>Interactive DAG Graph</h2>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
-                    Nodes are color-coded. Critical path nodes are outlined in red. Drag nodes to reposition.
+                    💡 <strong>Guide:</strong> Circular nodes are tasks. Arrows show task flow. Tasks outlined in <span style="color: var(--danger); font-weight: bold;">Red</span> are on the Critical Path (CPM) — any delays there delay the final delivery. You can drag tasks to rearrange the layout.
                 </p>
                 <div class="dag-container">
                     <svg class="dag-svg" id="dag-svg"></svg>

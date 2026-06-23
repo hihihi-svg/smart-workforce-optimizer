@@ -75,7 +75,14 @@
 
     <div class="hero-section">
         <h1>Employee Management</h1>
-        <p>Review the team profiles available for project assignments. Click a row to open detail stats, edit skills, or delete records.</p>
+        <p>Manage the team profiles available for project assignments. Click any row in the directory to edit or delete employees.</p>
+    </div>
+
+    <!-- Quick Help Banner -->
+    <div class="alert-panel alert-panel-info" style="border-radius: 12px; margin-bottom: 2rem; padding: 1.25rem;">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+            💡 <strong>How it works:</strong> The system stores employees' skills, experience (years), and current workload (%). During task matching, candidates with high skill matches and low workloads are scored higher to prevent team burnout and ensure high quality.
+        </p>
     </div>
 
     <div class="split-grid">
@@ -136,9 +143,9 @@
 
     <!-- Trie status strip at the bottom -->
     <div class="trie-status-strip">
-        <div>🌲 Trie Index Status: <strong style="color: var(--text-primary);">Constructed</strong></div>
+        <div>🌲 Skill Index Status: <strong style="color: var(--text-primary);">Constructed (Trie)</strong></div>
         <div id="trie-indexed-lbl">Loading skills...</div>
-        <div class="trie-status-badge">⚡ Trie Ready | O(N·L) Complexity</div>
+        <div class="trie-status-badge">⚡ Instant Skill Lookup Ready</div>
     </div>
 
     <!-- Detail Slide-in Panel -->

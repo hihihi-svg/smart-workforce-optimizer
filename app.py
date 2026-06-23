@@ -8,7 +8,7 @@ init_session_state()
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go To",
-    ["Home", "Employees", "Tasks", "Search", "Optimization", "Results"]
+    ["Home", "Employees", "Tasks", "Optimization", "Results"]
 )
 
 if page == "Home":
@@ -20,9 +20,6 @@ elif page == "Employees":
 elif page == "Tasks":
     from pages import tasks
     reload(tasks)
-elif page == "Search":
-    from pages import search
-    reload(search)
 elif page == "Optimization":
     from pages import optimization
     reload(optimization)
