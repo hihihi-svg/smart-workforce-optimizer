@@ -30,6 +30,7 @@ function setupLayout() {
             <li><a href="index.html" class="${pageName === 'index.html' || pageName === '' ? 'active' : ''}">🏠 Dashboard</a></li>
             <li><a href="employees.html" class="${pageName === 'employees.html' ? 'active' : ''}">👥 Employees</a></li>
             <li><a href="tasks.html" class="${pageName === 'tasks.html' ? 'active' : ''}">📋 Tasks</a></li>
+            <li><a href="search.html" class="${pageName === 'search.html' ? 'active' : ''}">🔍 Skill Search</a></li>
             <li><a href="optimization.html" class="${pageName === 'optimization.html' ? 'active' : ''}">⚙️ Optimization</a></li>
             <li><a href="results.html" class="${pageName === 'results.html' ? 'active' : ''}">📊 Results</a></li>
         </ul>
